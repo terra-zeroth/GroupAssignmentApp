@@ -26,31 +26,48 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var currentScreen by remember { mutableStateOf("home") }
+            var currentScreen by remember { mutableStateOf("Login") }
+            var groupName by remember { mutableStateOf("") } // Used state hoisting for the group name and user's name
+            var userName by remember { mutableStateOf("") }
 
             when (currentScreen) {
-                "home" -> HomeScreen(onNavigate = { screen -> currentScreen = screen })
+                "home" -> HomeScreen(
+                    groupName = groupName,
+                    userName = userName,
+                    onNavigate = { screen -> currentScreen = screen }
+                )
+
                 "Tasks" -> TasksScreen()
                 "Timeline" -> TimelineScreen()
                 "Documentation" -> DocumentationScreen()
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
+                "Login" -> LoginScreen(
+                    groupName = groupName,
+                    userName = userName,
+                    onGroupNameChange = { groupName = it },
+                    onUserNameChange = { userName = it},
+                    onNavigate = { screen -> currentScreen = screen }
+                )
             }
         }
 
     }
 
 
-
-@Composable
-fun HomeScreen(onNavigate: (String) -> Unit) {
+    @Composable
+    fun HomeScreen(
+        groupName: String,
+        userName: String,
+        onNavigate: (String) -> Unit
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-        ){
+        ) {
             Text(
-                text = "Group Name",
+                text = "$groupName",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -124,6 +141,13 @@ fun HomeScreen(onNavigate: (String) -> Unit) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Go to Settings")
+            }
+            Button(
+                onClick = { onNavigate("Login") },
+                shape = RectangleShape,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Go back to Login")
             }
         }
     }
