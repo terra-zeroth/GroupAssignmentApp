@@ -37,7 +37,9 @@ class MainActivity : ComponentActivity() {
                     onNavigate = { screen -> currentScreen = screen }
                 )
 
-                "Tasks" -> TasksScreen()
+                "Tasks" -> TasksScreen(
+                    userName = userName
+                )
                 "Timeline" -> TimelineScreen()
                 "Documentation" -> DocumentationScreen()
                 "Github" -> GithubScreen()

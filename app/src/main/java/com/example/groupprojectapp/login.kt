@@ -23,13 +23,6 @@ fun LoginScreen(
     onUserNameChange: (String) -> Unit,
     onNavigate: (String) -> Unit) {
     var password by remember { mutableStateOf("") }
-    val validAccounts = mapOf(
-        "Manasviba" to "password1",
-        "Aliyah" to "password2",
-        "Twisha" to "password3",
-        "Test" to "password4"
-
-    )
 
     Column {
         OutlinedTextField(
@@ -55,7 +48,7 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                if (validAccounts[userName] == password) {
+                if (userDatabase[userName]?.password == password) {
                     onNavigate("home")
                 }
             },
