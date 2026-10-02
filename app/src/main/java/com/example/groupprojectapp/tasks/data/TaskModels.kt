@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey

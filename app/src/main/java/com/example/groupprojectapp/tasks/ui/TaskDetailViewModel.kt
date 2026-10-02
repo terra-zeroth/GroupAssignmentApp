@@ -1,8 +1,12 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.groupprojectapp.tasks.data.Member
+import com.example.groupprojectapp.tasks.data.Task
+import com.example.groupprojectapp.tasks.data.TaskPriority
+import com.example.groupprojectapp.tasks.data.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

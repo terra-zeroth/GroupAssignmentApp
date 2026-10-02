@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -39,9 +39,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.groupprojectapp.tasks.data.TaskPriority
 import java.time.Instant
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+
+/**
+ * VIEW (MVVM):
+ * the add/edit task form. It is used for both cases:
+ * a blank form for a new task, or a pre-filled form when a task is tapped.
+ *
+ * Fields:
+ * title, description, due date (date picker), priority (segmented
+ * buttons) and assignee (dropdown of team members), plus a Save button.
+ *
+ * What it does NOT do:
+ * it holds no form data itself. Every field reads from
+ * [TaskDetailUiState] and reports changes to [TaskDetailViewModel]
+ * (onTitleChange, onPriorityChange, saveTask, ...). Validation and saving
+ * happen in the ViewModel.
+ *
+ * Local UI-only state:
+ * [showDatePicker] and [assigneeMenuExpanded] (is the
+ * dialog or menu open?) stay here because they are not app data.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

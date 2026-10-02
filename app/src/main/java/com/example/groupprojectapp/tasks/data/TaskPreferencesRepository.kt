@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
@@ -7,6 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
+/** The three ways the task list can be sorted. The chosen one is saved in DataStore. */
 enum class TaskSortOrder { DUE_DATE, PRIORITY, ASSIGNEE }
 
 private val Context.taskDataStore by preferencesDataStore(name = "task_prefs")

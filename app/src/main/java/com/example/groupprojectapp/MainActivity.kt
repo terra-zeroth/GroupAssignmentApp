@@ -3,65 +3,72 @@ package com.example.groupprojectapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.groupprojectapp.login.ui.LoginScreen
+import com.example.groupprojectapp.session.SessionViewModel
 
+/**
+ * Entry point of the app. It acts as a simple screen switcher driven by [SessionViewModel].
+ *
+ * The [SessionViewModel] maintains top-level application state (currentScreen, groupName,
+ * userName) across configuration changes such as screen rotations.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var currentScreen by remember { mutableStateOf("Login") }
-            var groupName by remember { mutableStateOf("") } // Used state hoisting for the group name and user's name
-            var userName by remember { mutableStateOf("") }
+            // 1. Get the shared SessionViewModel and collect its state ABOVE the when block
+            val sessionViewModel: SessionViewModel = viewModel()
+            val sessionState by sessionViewModel.uiState.collectAsState()
 
-            when (currentScreen) {
+            // 2. Switch screens based on currentScreen from SessionViewModel
+            when (sessionState.currentScreen) {
+                "Login" -> {
+                    LoginScreen(
+                        onSuccess = { group, user ->
+                            sessionViewModel.onLoginSuccess(group, user)
+                        }
+                    )
+                }
+
                 "home" -> HomeScreen(
-                    groupName = groupName,
-                    userName = userName,
-                    onNavigate = { screen -> currentScreen = screen }
+                    groupName = sessionState.groupName,
+                    userName = sessionState.userName,
+                    onNavigate = { screen -> sessionViewModel.navigateTo(screen) },
+                    onLogout = { sessionViewModel.logout() }
                 )
 
                 "Tasks" -> TasksScreen(
-                    userName = userName
+                    userName = sessionState.userName
                 )
+
                 "Timeline" -> TimelineScreen()
                 "Documentation" -> DocumentationScreen()
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
-                "Login" -> LoginScreen(
-                    groupName = groupName,
-                    userName = userName,
-                    onGroupNameChange = { groupName = it },
-                    onUserNameChange = { userName = it},
-                    onNavigate = { screen -> currentScreen = screen }
-                )
             }
         }
-
     }
 
-
+    /** The home screen: shows the group name and a button for each section of the app. */
     @Composable
     fun HomeScreen(
         groupName: String,
         userName: String,
-        onNavigate: (String) -> Unit
+        onNavigate: (String) -> Unit,
+        onLogout: () -> Unit
     ) {
         Column(
             modifier = Modifier
@@ -69,18 +76,17 @@ class MainActivity : ComponentActivity() {
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "$groupName",
+                text = groupName,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold
             )
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
-
             ) {
-
 
                 Box(
                     modifier = Modifier
@@ -94,6 +100,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Text("Completion:")
                 }
+
                 Box(
                     modifier = Modifier
                         .weight(1f)
@@ -106,16 +113,17 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Text("Current To-Do")
                 }
+
             }
+
             Button(
                 onClick = { onNavigate("Tasks") },
                 shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth()
-
             ) {
                 Text("Go to Tasks")
-
             }
+
             Button(
                 onClick = { onNavigate("Timeline") },
                 shape = RectangleShape,
@@ -123,6 +131,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Go to Timeline")
             }
+
             Button(
                 onClick = { onNavigate("Documentation") },
                 shape = RectangleShape,
@@ -130,6 +139,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Go to Documentation")
             }
+
             Button(
                 onClick = { onNavigate("Github") },
                 shape = RectangleShape,
@@ -137,6 +147,7 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Go to GitHub")
             }
+
             Button(
                 onClick = { onNavigate("Settings") },
                 shape = RectangleShape,
@@ -144,13 +155,20 @@ class MainActivity : ComponentActivity() {
             ) {
                 Text("Go to Settings")
             }
+
             Button(
-                onClick = { onNavigate("Login") },
+                onClick = { onLogout() }, // Triggers logout to clear state & send back to Login
                 shape = RectangleShape,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Go back to Login")
             }
+
+
         }
+
     }
+
+
+
 }
