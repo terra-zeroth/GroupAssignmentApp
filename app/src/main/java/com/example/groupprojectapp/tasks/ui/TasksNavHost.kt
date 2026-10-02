@@ -31,6 +31,9 @@ object TaskRoutes {
 }
 
 /**
+ *  * VIEW layer entry point: creates the container and factory once, then
+ *  * switches between the list screen and the detail screen.
+ *
  * Self-contained navigation for the Tasks feature (list + detail-by-id).
  * This is deliberately its OWN NavHost rather than a change to
  * MainActivity's outer screen switch: it's the only thing that has to be

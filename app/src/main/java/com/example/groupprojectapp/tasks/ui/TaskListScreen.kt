@@ -42,6 +42,22 @@ import com.example.groupprojectapp.tasks.data.TaskWithAssignee
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+/**
+ * VIEW (MVVM): the to-do list screen.
+ *
+ * What it shows: a top bar with a sort menu, a row of filter chips (one per
+ * team member, for job allocation), an "overdue" banner and the list of
+ * tasks. A + button opens the add-task screen.
+ *
+ * What it does NOT do: no sorting, filtering or database work happens here.
+ * It collects [TaskListUiState] from [TaskListViewModel] and only draws it.
+ * User actions (sort chosen, chip tapped, checkbox ticked) are passed back to
+ * the ViewModel and navigation clicks are passed up through the lambdas.
+ *
+ * Local UI-only state: [sortMenuExpanded] (is the dropdown open?) stays here
+ * because it is not app data.
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListScreen(
@@ -149,6 +165,8 @@ fun TaskListScreen(
     }
 }
 
+
+/** One row in the list: checkbox, title (struck through if done), assignee and due date. */
 @Composable
 private fun TaskRow(
     taskWithAssignee: TaskWithAssignee,

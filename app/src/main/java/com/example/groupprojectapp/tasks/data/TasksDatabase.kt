@@ -5,6 +5,15 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
+/**
+ * MODEL (data layer): the Room database for the Tasks feature. It holds the
+ * `tasks` and `members` tables and hands out their DAOs.
+ *
+ * [getInstance] is a singleton: one shared database for the whole app, so
+ * every caller reads and writes the same data. `@Volatile` and `synchronized`
+ * make sure two threads can't create it twice.
+ */
+
 @Database(entities = [Task::class, Member::class], version = 1, exportSchema = false)
 abstract class TasksDatabase : RoomDatabase() {
 

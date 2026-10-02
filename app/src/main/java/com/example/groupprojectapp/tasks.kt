@@ -8,7 +8,7 @@ import com.example.groupprojectapp.tasks.ui.TasksFeature
  * TasksScreen(userName = userName) and nobody needs to touch that file to
  * pick up everything in the tasks/ package (Room, DataStore, ViewModels,
  * its own internal navigation for the detail-by-id screen). See
- * com.example.groupprojectapp.tasks.TasksNavHost for the real
+ * com.example.groupprojectapp.tasks.ui.TasksNavHost for the real
  * implementation.
  */
 @Composable

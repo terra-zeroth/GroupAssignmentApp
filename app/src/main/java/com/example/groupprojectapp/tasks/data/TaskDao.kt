@@ -9,6 +9,16 @@ import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * MODEL (data layer): the database queries for tasks. Room writes the
+ * implementation for us from these annotations.
+ *
+ * The two reads return a Flow, so they send a fresh list whenever the tasks
+ * table changes. That is why the UI updates without a manual refresh.
+ * The writes are `suspend` functions so they run off the main thread.
+ * Reads return [TaskWithAssignee] so each task arrives with its Member attached.
+ */
+
 @Dao
 interface TaskDao {
 

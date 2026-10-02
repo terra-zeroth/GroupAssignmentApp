@@ -6,6 +6,13 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
+/**
+ * MODEL (data layer): the database queries for team members.
+ * [getAllMembers] is a live Flow (used by the filter chips and the assignee
+ * dropdown). [getAllMembersOnce] is a one-off read, used only to check
+ * whether the table is empty before seeding.
+ */
+
 @Dao
 interface MemberDao {
 
