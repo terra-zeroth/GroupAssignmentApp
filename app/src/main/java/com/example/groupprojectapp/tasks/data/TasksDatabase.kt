@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.data
 
 import android.content.Context
 import androidx.room.Database

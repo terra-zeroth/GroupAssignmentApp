@@ -1,7 +1,7 @@
 package com.example.groupprojectapp
 
 import androidx.compose.runtime.Composable
-import com.example.groupprojectapp.tasks.TasksFeature
+import com.example.groupprojectapp.tasks.ui.TasksFeature
 
 /**
  * Kept as a thin delegate on purpose: MainActivity.kt already calls

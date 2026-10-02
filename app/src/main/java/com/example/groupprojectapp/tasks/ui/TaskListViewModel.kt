@@ -1,7 +1,14 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.groupprojectapp.tasks.data.Member
+import com.example.groupprojectapp.tasks.data.Task
+import com.example.groupprojectapp.tasks.data.TaskPreferencesRepository
+import com.example.groupprojectapp.tasks.data.TaskRepository
+import com.example.groupprojectapp.tasks.data.TaskSortOrder
+import com.example.groupprojectapp.tasks.data.TaskStatus
+import com.example.groupprojectapp.tasks.data.TaskWithAssignee
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

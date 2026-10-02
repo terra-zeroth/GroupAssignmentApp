@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.ui
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -36,6 +36,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.example.groupprojectapp.tasks.data.TaskSortOrder
+import com.example.groupprojectapp.tasks.data.TaskStatus
+import com.example.groupprojectapp.tasks.data.TaskWithAssignee
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
