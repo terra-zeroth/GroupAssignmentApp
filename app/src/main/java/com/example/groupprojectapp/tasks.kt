@@ -1,24 +1,17 @@
 package com.example.groupprojectapp
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import com.example.groupprojectapp.SampleData.sampleTasks
+import com.example.groupprojectapp.tasks.TasksFeature
 
+/**
+ * Kept as a thin delegate on purpose: MainActivity.kt already calls
+ * TasksScreen(userName = userName) and nobody needs to touch that file to
+ * pick up everything in the tasks/ package (Room, DataStore, ViewModels,
+ * its own internal navigation for the detail-by-id screen). See
+ * com.example.groupprojectapp.tasks.TasksNavHost for the real
+ * implementation.
+ */
 @Composable
 fun TasksScreen(userName: String) {
-    val tasks = sampleTasks[userName] ?: emptyList()
-
-    Column {
-        Text(
-            text = "Tasks for $userName",
-            fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
-        )
-        tasks.forEach { task ->
-            Text("• $task")
-        }
-    }
+    TasksFeature(currentUserName = userName)
 }
