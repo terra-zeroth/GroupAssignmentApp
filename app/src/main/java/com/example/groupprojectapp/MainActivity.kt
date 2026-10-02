@@ -21,6 +21,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.layout.fillMaxWidth
+/**
+ * Entry point of the app. It acts as a simple screen switcher: [currentScreen]
+ * decides which top-level screen is drawn (Login, Home, Tasks, Timeline,
+ * Documentation, GitHub or Settings).
+ *
+ * The group name and user name are kept here and passed down to the screens
+ * that need them (state hoisting). The Tasks feature has its own internal
+ * navigation, see TasksFeature in tasks/ui/TasksNavHost.kt.
+ */
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,7 +65,7 @@ class MainActivity : ComponentActivity() {
 
     }
 
-
+    /** The home screen: shows the group name and a button for each section of the app. */
     @Composable
     fun HomeScreen(
         groupName: String,
