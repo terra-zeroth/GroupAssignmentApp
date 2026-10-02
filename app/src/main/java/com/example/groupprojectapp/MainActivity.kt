@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.layout.fillMaxWidth
+import com.example.groupprojectapp.login.ui.LoginScreen
+
 /**
  * Entry point of the app. It acts as a simple screen switcher: [currentScreen]
  * decides which top-level screen is drawn (Login, Home, Tasks, Timeline,
@@ -53,13 +55,15 @@ class MainActivity : ComponentActivity() {
                 "Documentation" -> DocumentationScreen()
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
-                "Login" -> LoginScreen(
-                    groupName = groupName,
-                    userName = userName,
-                    onGroupNameChange = { groupName = it },
-                    onUserNameChange = { userName = it},
-                    onNavigate = { screen -> currentScreen = screen }
-                )
+                "Login" -> {
+                    LoginScreen(
+                        onSuccess = { group, user ->
+                            groupName = group
+                            userName = user
+                            currentScreen = "home"
+                        }
+                    )
+                }
             }
         }
 
