@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.timeline.data
+package com.example.groupprojectapp.timeline.ui
 
 import com.example.groupprojectapp.tasks.data.TaskStatus
 

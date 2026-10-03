@@ -1,6 +1,5 @@
 package com.example.groupprojectapp.timeline.ui
 
-import com.example.groupprojectapp.timeline.data.TimelineItem
 import java.time.LocalDate
 
 data class TimelineUiState(
