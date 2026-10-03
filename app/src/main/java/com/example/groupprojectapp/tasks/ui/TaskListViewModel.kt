@@ -62,6 +62,9 @@ class TaskListViewModel(
             members = members,
             sortOrder = sortOrder,
             selectedAssigneeId = assigneeFilter,
+
+            // calculate overdue tasks:
+            // due date is before today AND status is not DONE
             overdueCount = filtered.count {
                 it.task.dueDateEpochDay < today && it.task.status != TaskStatus.DONE
             },

@@ -9,4 +9,16 @@ data class TimelineItem(
     val status: TaskStatus = TaskStatus.TODO,
     val startOffsetDays: Int = 0, // the days from the timeline's first day to where the bar begins
     val lengthDays: Int = 1, // how many days the bar is
+    val isOverdue: Boolean = false // for colour status
 )
+
+// other notes: (TODO REMOVE THIS BEFORE SUBMISSION)
+/*
+   startOffsetDays -> position where the bar begins
+      how far from the left edge of the whole chart does the bar start?
+      need chart's start date and chart's first date (difference between them)
+
+    lengthDays -> width - how long the bar is
+    how many days does this task last?
+      need task's start date and due date (dif between two + 1)
+*/
