@@ -100,6 +100,7 @@ fun TimelineContent(
                         headerHeight = headerHeightDp,
                         rowHeight = rowHeightDp,
                         dayWidth = dayWidthDp,
+                        todayOffset = uiState.todayOffset,
                         horizontalScrollState = horizontalScrollState,
                         modifier = Modifier.weight(1f)
                     )
