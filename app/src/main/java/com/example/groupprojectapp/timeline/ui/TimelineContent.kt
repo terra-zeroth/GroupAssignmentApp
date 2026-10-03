@@ -27,12 +27,12 @@ import java.time.LocalDate
     one row per task with
        [x] title
        [x] assignee
-       [ ] bar positioned
-       [ ] sized
-       [ ] use startOffsetDays/lengthDays
-       [ ] colour by status (check isOverdue first)
+       [x] bar positioned
+       [x] sized
+       [x] use startOffsetDays/lengthDays
+       [x] colour by status (check isOverdue first)
     [x] show status as text/icon too, not just colour for (R5) Accessibility
-    [ ] today line
+    [x] today line
     [x] empty state when there are no tasks
     [x] horizontal scrolling
  */
