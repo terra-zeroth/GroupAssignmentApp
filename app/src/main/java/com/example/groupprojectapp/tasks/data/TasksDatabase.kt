@@ -14,7 +14,7 @@ import androidx.room.RoomDatabase
  * make sure two threads can't create it twice.
  */
 
-@Database(entities = [Task::class, Member::class], version = 1, exportSchema = false)
+@Database(entities = [Task::class, Member::class], version = 2, exportSchema = false)
 abstract class TasksDatabase : RoomDatabase() {
 
     abstract fun taskDao(): TaskDao
@@ -30,7 +30,12 @@ abstract class TasksDatabase : RoomDatabase() {
                     context.applicationContext,
                     TasksDatabase::class.java,
                     "tasks.db"
-                ).build().also { INSTANCE = it }
+                )
+                    .fallbackToDestructiveMigration(true)
+                    // !! Room will wipe and recreate database tables automatically
+                    // when version changes !!
+                    .build()
+                    .also { INSTANCE = it }
             }
     }
 }

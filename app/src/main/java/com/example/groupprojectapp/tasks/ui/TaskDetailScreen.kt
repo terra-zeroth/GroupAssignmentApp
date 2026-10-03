@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,9 +61,17 @@ import java.time.format.DateTimeFormatter
  * happen in the ViewModel.
  *
  * Local UI-only state:
- * [showDatePicker] and [assigneeMenuExpanded] (is the
+ * [activePicker] (related to DatePickerTarget enum state)
+ * and [assigneeMenuExpanded] (is the
  * dialog or menu open?) stay here because they are not app data.
  */
+
+// Added status for setting up Due Date or Start Date needed for timeline
+enum class DatePickerTarget{
+    NONE,
+    START_DATE,
+    DUE_DATE
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -72,7 +81,9 @@ fun TaskDetailScreen(
     onSaved: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var showDatePicker by remember { mutableStateOf(false) }
+    // var showDatePicker by remember { mutableStateOf(false) }
+    // Replaced the boolean with enum
+    var activePicker by rememberSaveable { mutableStateOf(DatePickerTarget.NONE) }
     var assigneeMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -115,6 +126,28 @@ fun TaskDetailScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            Text("Start date", style = MaterialTheme.typography.labelLarge)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = uiState.startDate.format(DateTimeFormatter.ofPattern("d MMM yyyy")),
+                    onValueChange = {},
+                    readOnly = true,
+                    isError = uiState.startDateError,
+                    supportingText = {
+                        if (uiState.startDateError)
+                            Text("Start date can't be after the due date")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { activePicker = DatePickerTarget.START_DATE }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
             Text("Due date", style = MaterialTheme.typography.labelLarge)
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
@@ -129,7 +162,8 @@ fun TaskDetailScreen(
                 Box(
                     modifier = Modifier
                         .matchParentSize()
-                        .clickable { showDatePicker = true }
+                        .clickable { activePicker = DatePickerTarget.DUE_DATE }
+                        // replaced the showDatePicker with an enum DatePickerTarget
                 )
             }
 
@@ -206,26 +240,47 @@ fun TaskDetailScreen(
         }
     }
 
-    if (showDatePicker) {
+    // no longer showDatePicker
+    if (activePicker != DatePickerTarget.NONE) {
+
+        // Determine the initial date (in epoch millis UTC)
+        // to pre-fill the date picker based on which date field is being edited
+        val initialMillis = when (activePicker) {
+            DatePickerTarget.START_DATE ->
+                uiState.startDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+            DatePickerTarget.DUE_DATE ->
+                uiState.dueDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+
+            DatePickerTarget.NONE -> 0L // unreachable
+        }
+
+
         val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = uiState.dueDate
-                .atStartOfDay(ZoneOffset.UTC)
-                .toInstant()
-                .toEpochMilli()
+            initialSelectedDateMillis = initialMillis
         )
         DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
+            onDismissRequest = { activePicker = DatePickerTarget.NONE },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val date = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-                        viewModel.onDueDateChange(date)
+                        val date = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+
+                        when (activePicker) {
+                            DatePickerTarget.START_DATE -> viewModel.onStartDateChange(date)
+                            DatePickerTarget.DUE_DATE -> viewModel.onDueDateChange(date)
+                            DatePickerTarget.NONE -> Unit
+                        }
                     }
-                    showDatePicker = false
+                    activePicker = DatePickerTarget.NONE
                 }) { Text("OK") }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { activePicker = DatePickerTarget.NONE }) {
+                    Text("Cancel")
+                }
             }
         ) {
             DatePicker(state = datePickerState)
