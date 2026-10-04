@@ -20,15 +20,24 @@ private val OrangeLight = Color(0xFFE65100)
 private val OrangeDark = Color(0xFFFFB74D)
 
 
-
+/**
+ * Returns the bar colour for a task: Overdue = error (red), Done = green,
+ * In progress = theme primary, To do = orange.
+ *
+ * isOverdue is checked before status, matching the status text in
+ * [TimelineLeftPane], so an overdue To-do task is red rather than orange.
+ *
+ * Used by both the bars and the legend. Composable because it reads
+ * MaterialTheme; green and orange have light and dark variants.
+ */
 @Composable
 fun timelineItemColor(
     isOverdue: Boolean,
     status: TaskStatus
 ): Color {
     // in case for any dark theme
+    // TODO: once settings has a dark-mode toggle
     val isDark = isSystemInDarkTheme()
-
 
     // check if it is overdue like the status text
     if (isOverdue){

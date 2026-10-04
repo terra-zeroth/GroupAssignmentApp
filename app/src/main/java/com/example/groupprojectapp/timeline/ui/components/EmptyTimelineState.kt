@@ -11,6 +11,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+/**
+ * VIEW (MVVM) — timeline component:
+ * shown instead of the chart when the ViewModel reports no tasks
+ * (isLoading = false and items is empty).
+ */
 @Composable
 fun EmptyTimelineState(
     modifier: Modifier = Modifier

@@ -11,6 +11,29 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
+/**
+ * VIEWMODEL (MVVM):
+ * turns the task list into timeline state.
+ *
+ * What it does: collects repository.allTasks (a live Flow, so edits in the
+ * Tasks screen show up here automatically), converts each task into a
+ * [TimelineItem] and exposes the result as [uiState].
+ *
+ * Business logic kept here (R2), not in composables:
+ * - the chart's date range (earliest start / latest due, always including
+ *   today, plus one day of padding at each end)
+ * - each bar's start offset and length in days (length is at least 1)
+ * - overdue = due before today and not DONE (same rule as TaskListViewModel)
+ * - "Unassigned" when a task has no assignee
+ * - row order: start, then length, then title
+ *
+ * What it does NOT do: no drawing and no dp/sp sizes. It works only in days.
+ *
+ * Owner: requested in TimelineFeature with viewModel(); MainActivity is the
+ * owner (no NavHost), so the instance survives rotation and leaving/returning
+ * to the Timeline.
+ */
+
 class TimelineViewModel(
     private val repository: TaskRepository
 ) : ViewModel(){
@@ -23,6 +46,11 @@ class TimelineViewModel(
             initialValue = TimelineUiState() // Initial state with isLoading = true
         )
 
+    /**
+     * Builds a complete [TimelineUiState] from the current task list.
+     * An empty list returns an empty state early, because min/max would
+     * crash on an empty list.
+     */
     private fun calculateTimelineState(tasks: List<TaskWithAssignee>): TimelineUiState {
         val todayLocalDay = LocalDate.now()
         val todayEpochDay = todayLocalDay.toEpochDay()

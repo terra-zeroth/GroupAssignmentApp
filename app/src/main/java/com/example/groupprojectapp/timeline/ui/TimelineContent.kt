@@ -31,9 +31,30 @@ import com.example.groupprojectapp.timeline.ui.components.TimelineRightPane
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.LocalDate
 
+/**
+ * VIEW (MVVM):
+ * the Timeline (Gantt chart) screen.
+ *
+ * What it shows: a top bar with Back, then one of three states:
+ * loading spinner, empty message, or the chart (legend, a fixed left pane of
+ * task labels, and a right pane with the date header, bars and today line
+ * that scrolls sideways).
+ *
+ * What it does NOT do: no date maths, filtering or database work. It draws
+ * [TimelineUiState] and passes the Back click up through onBackClick.
+ * Because it only receives state, the previews below can supply fake data.
+ *
+ * Local UI-only state: the two scroll positions stay here because they are
+ * not app data and nothing outside this screen needs them.
+ *
+ * Accessibility (R5): row height, header height and day width are sp-based
+ * so the chart grows with the user's text size; status is shown as text as
+ * well as colour; the Back icon has a content description.
+ */
+
 /*
-    TODO:
-    [ ] date header (Option B: show month name on first column and when day == 1)
+    TODO (MAKE SURE TO REMOVE THIS - BEFORE SUBMISSION):
+    [x] date header (Option B: show month name on first column and when day == 1)
     one row per task with
        [x] title
        [x] assignee

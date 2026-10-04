@@ -18,6 +18,20 @@ import androidx.compose.ui.unit.dp
 import com.example.groupprojectapp.tasks.data.TaskStatus
 import com.example.groupprojectapp.timeline.ui.TimelineItem
 
+/**
+ * VIEW (MVVM) — timeline component:
+ * the fixed left-hand column of task labels (it scrolls up and down with the
+ * chart but never sideways).
+ *
+ * Each row shows the title on line 1 and "assignee status" on line 2.
+ * Status is written out (including "Overdue", checked first) so colour isn't
+ * the only signal (R5).
+ *
+ * Alignment: the top spacer matches the date header height, and every row
+ * uses the same rowHeight as [TimelineRightPane], so each label sits level
+ * with its bar. Both lines are limited to one line with an ellipsis so long
+ * titles or large system text can't make a row taller.
+ */
 @Composable
 fun TimelineLeftPane(
     items: List<TimelineItem>,

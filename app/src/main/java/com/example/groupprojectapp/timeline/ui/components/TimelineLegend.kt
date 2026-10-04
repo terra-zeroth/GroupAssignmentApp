@@ -19,6 +19,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.groupprojectapp.tasks.data.TaskStatus
 
+/**
+ * VIEW (MVVM) — timeline component:
+ * the colour key shown above the chart.
+ *
+ * Swatch colours come from [timelineItemColor], the same function the bars
+ * use, so the legend and the bars can never disagree.
+ * FlowRow wraps entries onto a new line when space runs out (e.g. with large
+ * system text), instead of squeezing the last label.
+ */
 @Composable
 fun TimelineLegend(modifier: Modifier = Modifier) {
     FlowRow(
@@ -47,6 +56,7 @@ fun TimelineLegend(modifier: Modifier = Modifier) {
     }
 }
 
+/** One legend item: a small coloured square followed by its label. */
 @Composable
 private fun LegendEntry(
     label: String,

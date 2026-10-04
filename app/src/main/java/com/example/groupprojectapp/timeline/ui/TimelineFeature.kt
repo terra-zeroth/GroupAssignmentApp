@@ -16,13 +16,24 @@ import com.example.groupprojectapp.tasks.TaskContainer
 /**
  * Wrapper composable responsible for managing dependency injection,
  * ViewModel instantiation, and state collection for the Timeline screen.
+ *
+ * WRAPPER (not previewable): it reaches the database and ViewModel, so it
+ * can't run in a @Preview. [TimelineContent] holds all the UI and is
+ * previewable with fake state instead.
+ *
+ * Back: the TopAppBar arrow and the system Back gesture (BackHandler)
+ * both call onBackClick, so Back returns to the dashboard instead of
+ * exiting the app (R1).
+ *
+ * TaskContainer is created here because the Tasks container lives inside
+ * TasksFeature; this is safe because the database is a singleton.
  */
 @Composable
 fun TimelineFeature(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ){
-    BackHandler(onBack = onBackClick) // backButton
+    BackHandler(onBack = onBackClick)
 
     // obtain the application context to initialize local storage/database containers
     val context = LocalContext.current.applicationContext

@@ -23,6 +23,27 @@ import androidx.compose.ui.unit.dp
 import com.example.groupprojectapp.timeline.ui.TimelineItem
 import java.time.LocalDate
 
+/**
+ * VIEW (MVVM) — timeline component:
+ * the right-hand side of the chart: date header, one track per task with its
+ * bar, and the today line.
+ *
+ * Layout: everything sits inside ONE horizontally scrolling Box, so the
+ * header, bars and today line always move together. Bars are positioned with
+ * offset (dayWidth × startOffsetDays) and sized with width
+ * (dayWidth × lengthDays); those day numbers come from [TimelineViewModel].
+ *
+ * Header labels: day number for each column, plus the month name on the
+ * first column and on the 1st of any month. Today's number is shown in red.
+ *
+ * Today line: drawn after the Column so it sits on top. Its height is
+ * calculated (header + rows) rather than using fillMaxHeight, because this
+ * pane sits inside a vertical scroll where the available height is unlimited.
+ * Hidden when todayOffset is outside the chart's range.
+ *
+ * Rows must use the same rowHeight as [TimelineLeftPane] or labels and bars
+ * stop lining up.
+ */
 @Composable
 fun TimelineRightPane(
     items: List<TimelineItem>,
@@ -31,7 +52,7 @@ fun TimelineRightPane(
     headerHeight: Dp,
     rowHeight: Dp,
     dayWidth: Dp,
-    todayOffset: Int, // // days from firstDate to today; outside 0 until totalNumDays = line hidden
+    todayOffset: Int, // days from firstDate to today; outside 0 until totalNumDays = line hidden
     horizontalScrollState: ScrollState,
     modifier: Modifier = Modifier
 ) {
@@ -49,7 +70,7 @@ fun TimelineRightPane(
             ) {
                 (0 until totalNumDays).forEach { dayIndex ->
                     val currentDate = firstDate.plusDays(dayIndex.toLong())
-                    val isToday = dayIndex == todayOffset // today line calculation
+                    val isToday = dayIndex == todayOffset // red header number check
 
                     // Show month label on first column (dayIndex == 0) OR on 1st of any month
                     val showMonthLabel = dayIndex == 0 || currentDate.dayOfMonth == 1
