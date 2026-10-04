@@ -4,9 +4,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,7 +32,7 @@ import java.time.LocalDate
 
 /*
     TODO:
-    [x] date header (Option B: show month name on first column and when day == 1)
+    [ ] date header (Option B: show month name on first column and when day == 1)
     one row per task with
        [x] title
        [x] assignee
@@ -43,67 +52,93 @@ import java.time.LocalDate
       [x] row height, header height and day width are sp-based, so they grow with the user's text size
 */
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimelineContent(
     uiState: TimelineUiState,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ){
-    // No scroll state parameter: scroll positions are only used inside this screen,
-    // so they're created here with rememberScrollState(). Neither the ViewModel nor
-    // the Previews need to see or control them.
-    
-    val density = LocalDensity.current
-    // Dimensions defined in sp so they scale properly with accessibility font size, then converted to Dp
-    val rowHeightDp = with(density) { 64.sp.toDp() }
-    val headerHeightDp = with(density) { 40.sp.toDp() }
-    val dayWidthDp = with(density) { 56.sp.toDp() } // sp-based width so 2x font scale header dates don't wrap/cut off
-
-    // Remember scroll states:
-    val verticalScrollState = rememberScrollState()
-    val horizontalScrollState = rememberScrollState()
-
-    Column(modifier = modifier.fillMaxSize()) {
-        when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Timeline") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back to Dashboard"
+                        )
+                    }
                 }
-            }
-            uiState.items.isEmpty() -> {
-                EmptyTimelineState()
-            }
-            else -> {
-                // Legend placed inside the chart branch above the scroll container
-                TimelineLegend()
+            )
+        },
+        modifier = modifier
+    ) { innerPadding ->
+        // No scroll state parameter: scroll positions are only used inside this screen,
+        // so they're created here with rememberScrollState(). Neither the ViewModel nor
+        // the Previews need to see or control them.
 
-                // VERTICAL SCROLL CONTAINER (Links left and right panes together)
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(verticalScrollState)
-                ) {
-                    // LEFT PANE (Fixed sideways, scrolls vertically)
-                    TimelineLeftPane(
-                        items = uiState.items,
-                        headerHeight = headerHeightDp,
-                        rowHeight = rowHeightDp
-                    )
+        val density = LocalDensity.current
+        // Dimensions defined in sp so they scale properly with accessibility font size, then converted to Dp
+        val rowHeightDp = with(density) { 64.sp.toDp() }
+        val headerHeightDp = with(density) { 40.sp.toDp() }
+        val dayWidthDp =
+            with(density) { 56.sp.toDp() } // sp-based width so 2x font scale header dates don't wrap/cut off
 
-                    // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
-                    TimelineRightPane(
-                        items = uiState.items,
-                        firstDate = uiState.firstDate,
-                        totalNumDays = uiState.totalNumDays,
-                        headerHeight = headerHeightDp,
-                        rowHeight = rowHeightDp,
-                        dayWidth = dayWidthDp,
-                        todayOffset = uiState.todayOffset,
-                        horizontalScrollState = horizontalScrollState,
-                        modifier = Modifier.weight(1f)
-                    )
+        // Remember scroll states:
+        val verticalScrollState = rememberScrollState()
+        val horizontalScrollState = rememberScrollState()
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            when {
+                uiState.isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+
+                uiState.items.isEmpty() -> {
+                    EmptyTimelineState()
+                }
+
+                else -> {
+                    // Legend placed inside the chart branch above the scroll container
+                    TimelineLegend()
+
+                    // VERTICAL SCROLL CONTAINER (Links left and right panes together)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(verticalScrollState)
+                    ) {
+                        // LEFT PANE (Fixed sideways, scrolls vertically)
+                        TimelineLeftPane(
+                            items = uiState.items,
+                            headerHeight = headerHeightDp,
+                            rowHeight = rowHeightDp
+                        )
+
+                        // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
+                        TimelineRightPane(
+                            items = uiState.items,
+                            firstDate = uiState.firstDate,
+                            totalNumDays = uiState.totalNumDays,
+                            headerHeight = headerHeightDp,
+                            rowHeight = rowHeightDp,
+                            dayWidth = dayWidthDp,
+                            todayOffset = uiState.todayOffset,
+                            horizontalScrollState = horizontalScrollState,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
                 }
             }
         }
@@ -162,7 +197,7 @@ private val sampleTimelineUiState = TimelineUiState(
 @Composable
 private fun TimelineContentPreview(){
     GroupProjectAppTheme {
-        TimelineContent(uiState = sampleTimelineUiState)
+        TimelineContent(uiState = sampleTimelineUiState, onBackClick = {})
     }
 }
 
@@ -175,7 +210,8 @@ private fun TimelineContentEmptyPreview(){
                 // test the empty list state, not loading state
                 isLoading = false,
                 items = emptyList()
-            )
+            ),
+            onBackClick = {}
         )
     }
 }
@@ -189,7 +225,8 @@ private fun TimelineContentLoadingPreview(){
                 // would show a loading spinner instead of test items
                 isLoading = true,
                 items = emptyList()
-            )
+            ),
+            onBackClick = {}
         )
     }
 }
@@ -199,6 +236,6 @@ private fun TimelineContentLoadingPreview(){
 @Composable
 private fun TimelineContentSkeletonPreview() {
     GroupProjectAppTheme {
-        TimelineContent(uiState = sampleTimelineUiState)
+        TimelineContent(uiState = sampleTimelineUiState, onBackClick = {})
     }
 }

@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.timeline.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -18,8 +19,11 @@ import com.example.groupprojectapp.tasks.TaskContainer
  */
 @Composable
 fun TimelineFeature(
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ){
+    BackHandler(onBack = onBackClick) // backButton
+
     // obtain the application context to initialize local storage/database containers
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) } // instantiate to access the repository
@@ -39,6 +43,7 @@ fun TimelineFeature(
     // pass the collected UI state to the pure UI composable
     TimelineContent(
         uiState = uiState,
+        onBackClick = onBackClick,
         modifier = modifier
     )
 }

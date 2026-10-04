@@ -54,7 +54,9 @@ class MainActivity : ComponentActivity() {
                     userName = sessionState.userName
                 )
 
-                "Timeline" -> TimelineScreen()
+                "Timeline" -> TimelineScreen(
+                    onBackClick = { sessionViewModel.navigateTo("home")}
+                )
                 "Documentation" -> DocumentationScreen()
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
