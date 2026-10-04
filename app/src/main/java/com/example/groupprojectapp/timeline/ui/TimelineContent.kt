@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.timeline.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -193,9 +194,16 @@ private val sampleTimelineUiState = TimelineUiState(
 
 // PREVIEWS ---------------
 
-@Preview(showBackground = true)
+
+// simultanously shows both dark and light theme
+@Preview(showBackground = true, name = "Light Mode")
+@Preview(
+    showBackground = true,
+    uiMode = Configuration.UI_MODE_NIGHT_YES,
+    name = "Dark Mode"
+)
 @Composable
-private fun TimelineContentPreview(){
+private fun TimelineContentThemePreview() {
     GroupProjectAppTheme {
         TimelineContent(uiState = sampleTimelineUiState, onBackClick = {})
     }

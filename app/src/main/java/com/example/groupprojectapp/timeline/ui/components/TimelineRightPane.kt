@@ -50,16 +50,26 @@ fun TimelineRightPane(
                 (0 until totalNumDays).forEach { dayIndex ->
                     val currentDate = firstDate.plusDays(dayIndex.toLong())
                     val isToday = dayIndex == todayOffset // today line calculation
+
+                    // Show month label on first column (dayIndex == 0) OR on 1st of any month
+                    val showMonthLabel = dayIndex == 0 || currentDate.dayOfMonth == 1
+                    val dateText = if (showMonthLabel) {
+                        val monthName = currentDate.month.name.take(3).lowercase().replaceFirstChar { it.uppercase() }
+                        "$monthName ${currentDate.dayOfMonth}"
+                    } else {
+                        currentDate.dayOfMonth.toString()
+                    }
+
                     Box(
                         modifier = Modifier
                             .width(dayWidth)
                             .fillMaxHeight(),
                         contentAlignment = Alignment.Center
                     ) {
-                        // Show just the day number to prevent cramming / wrapping at 2x font scale
                         Text(
-                            text = currentDate.dayOfMonth.toString(),
+                            text = dateText,
                             style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
                             color = if (isToday) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                         )
                     }

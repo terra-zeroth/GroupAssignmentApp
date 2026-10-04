@@ -46,8 +46,9 @@ class TimelineViewModel(
             val minTaskStart = tasks.minOf { it.task.startDateEpochDay }
             val maxTaskDue = tasks.maxOf { it.task.dueDateEpochDay }
 
-            val rangeStartEpoch = minOf(minTaskStart, todayEpochDay)
-            val rangeEndEpoch = maxOf(maxTaskDue, todayEpochDay)
+            // Calculate bounds with 1 day padding on each end
+            val rangeStartEpoch = minOf(minTaskStart, todayEpochDay) - 1
+            val rangeEndEpoch = maxOf(maxTaskDue, todayEpochDay) + 1
 
             val totalNumDays = (rangeEndEpoch - rangeStartEpoch + 1).toInt()
             val firstDate = LocalDate.ofEpochDay(rangeStartEpoch)
@@ -80,8 +81,10 @@ class TimelineViewModel(
 
             }
 
-            // sort the items by start date so the chart reads top to bottom in time order
-            val sortedItems = timelineItems.sortedBy { it.startOffsetDays }
+            // sort the items by start offset then by task length (due date) so the chart reads top to bottom in time order
+            val sortedItems = timelineItems.sortedWith(
+                compareBy({ it.startOffsetDays }, { it.lengthDays }, { it.title })
+            )
             val todayOffsetDay = (todayEpochDay - rangeStartEpoch).toInt() // calculate current day marker offset
 
             state = TimelineUiState(
