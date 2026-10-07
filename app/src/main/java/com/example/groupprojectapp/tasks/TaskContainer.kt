@@ -1,6 +1,9 @@
 package com.example.groupprojectapp.tasks
 
 import android.content.Context
+import com.example.groupprojectapp.tasks.data.TaskPreferencesRepository
+import com.example.groupprojectapp.tasks.data.TaskRepository
+import com.example.groupprojectapp.tasks.data.TasksDatabase
 import com.example.groupprojectapp.userDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

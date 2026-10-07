@@ -1,8 +1,12 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.ui
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.groupprojectapp.tasks.data.Member
+import com.example.groupprojectapp.tasks.data.Task
+import com.example.groupprojectapp.tasks.data.TaskPriority
+import com.example.groupprojectapp.tasks.data.TaskRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,12 +19,14 @@ data class TaskDetailUiState(
     val title: String = "",
     val description: String = "",
     val dueDate: LocalDate = LocalDate.now(),
+    val startDate: LocalDate = LocalDate.now(),
     val priority: TaskPriority = TaskPriority.MEDIUM,
     val assigneeId: Long? = null,
     val members: List<Member> = emptyList(),
     val isNewTask: Boolean = true,
     val isLoading: Boolean = true,
-    val titleError: Boolean = false
+    val titleError: Boolean = false,
+    val startDateError: Boolean = false,
 )
 
 /**
@@ -66,6 +72,7 @@ class TaskDetailViewModel(
                             title = task.title,
                             description = task.description,
                             dueDate = LocalDate.ofEpochDay(task.dueDateEpochDay),
+                            startDate = LocalDate.ofEpochDay(task.startDateEpochDay),
                             priority = task.priority,
                             assigneeId = task.assigneeId,
                             isLoading = false
@@ -80,7 +87,10 @@ class TaskDetailViewModel(
 
     fun onTitleChange(value: String) = _uiState.update { it.copy(title = value, titleError = false) }
     fun onDescriptionChange(value: String) = _uiState.update { it.copy(description = value) }
-    fun onDueDateChange(value: LocalDate) = _uiState.update { it.copy(dueDate = value) }
+    fun onDueDateChange(value: LocalDate) =
+        _uiState.update { it.copy(dueDate = value, startDateError = false) }
+    fun onStartDateChange(value: LocalDate) =
+        _uiState.update { it.copy(startDate = value, startDateError = false) }
     fun onPriorityChange(value: TaskPriority) = _uiState.update { it.copy(priority = value) }
     fun onAssigneeChange(value: Long?) = _uiState.update { it.copy(assigneeId = value) }
 
@@ -90,16 +100,27 @@ class TaskDetailViewModel(
             _uiState.update { it.copy(titleError = true) }
             return
         }
+
+        if (state.startDate.isAfter(state.dueDate)) {
+            _uiState.update { it.copy(startDateError = true) }
+            return
+        }
+        
         viewModelScope.launch {
             val task = Task(
                 id = taskId ?: 0,
                 title = state.title.trim(),
                 description = state.description.trim(),
                 dueDateEpochDay = state.dueDate.toEpochDay(),
+                startDateEpochDay = state.startDate.toEpochDay(),
                 priority = state.priority,
                 assigneeId = state.assigneeId
             )
-            if (taskId == null) repository.saveTask(task) else repository.updateTask(task)
+            if (taskId == null){
+                repository.saveTask(task)
+            } else {
+                repository.updateTask(task)
+            }
             onSaved()
         }
     }

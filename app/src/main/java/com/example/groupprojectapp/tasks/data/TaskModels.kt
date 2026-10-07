@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.data
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
@@ -49,6 +49,7 @@ data class Task(
     val title: String,
     val description: String = "",
     val dueDateEpochDay: Long,
+    val startDateEpochDay: Long,
     val status: TaskStatus = TaskStatus.TODO,
     val priority: TaskPriority = TaskPriority.MEDIUM,
     val assigneeId: Long? = null,

@@ -1,10 +1,11 @@
-package com.example.groupprojectapp.tasks
+package com.example.groupprojectapp.tasks.data
 
 import kotlinx.coroutines.flow.Flow
 
 /**
  * Single source of truth for task/member data. ViewModels never talk to the
  * DAOs directly — that keeps Room out of the UI layer, per R2.
+ * Flows (allTasks, allMembers) are live feeds; the suspend functions are writes.
  */
 class TaskRepository(
     private val taskDao: TaskDao,
