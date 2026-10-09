@@ -47,26 +47,15 @@ import java.time.format.DateTimeFormatter
 
 /**
  * VIEW (MVVM):
- * the add/edit task form. It is used for both cases:
- * a blank form for a new task, or a pre-filled form when a task is tapped.
+ * the add/edit task form. Fields: title, description, start/due date
+ * (date picker), priority (segmented buttons), assignee (dropdown of team
+ * members), depends-on (dropdown of other tasks), plus a Save button.
  *
- * Fields:
- * title, description, due date (date picker), priority (segmented
- * buttons) and assignee (dropdown of team members), plus a Save button.
- *
- * What it does NOT do:
- * it holds no form data itself. Every field reads from
- * [TaskDetailUiState] and reports changes to [TaskDetailViewModel]
- * (onTitleChange, onPriorityChange, saveTask, ...). Validation and saving
- * happen in the ViewModel.
- *
- * Local UI-only state:
- * [activePicker] (related to DatePickerTarget enum state)
- * and [assigneeMenuExpanded] (is the
- * dialog or menu open?) stay here because they are not app data.
+ * What it does NOT do: it holds no form data itself. Every field reads
+ * from [TaskDetailUiState] and reports changes to [TaskDetailViewModel].
+ * Validation and saving happen in the ViewModel.
  */
 
-// Added status for setting up Due Date or Start Date needed for timeline
 enum class DatePickerTarget{
     NONE,
     START_DATE,
@@ -81,10 +70,9 @@ fun TaskDetailScreen(
     onSaved: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    // var showDatePicker by remember { mutableStateOf(false) }
-    // Replaced the boolean with enum
     var activePicker by rememberSaveable { mutableStateOf(DatePickerTarget.NONE) }
     var assigneeMenuExpanded by remember { mutableStateOf(false) }
+    var dependsOnMenuExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -156,14 +144,10 @@ fun TaskDetailScreen(
                     readOnly = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                // Transparent tap-catcher on top of the read-only field, so
-                // tapping anywhere on it reliably opens the date picker
-                // (a readOnly OutlinedTextField can otherwise swallow taps).
                 Box(
                     modifier = Modifier
                         .matchParentSize()
                         .clickable { activePicker = DatePickerTarget.DUE_DATE }
-                        // replaced the showDatePicker with an enum DatePickerTarget
                 )
             }
 
@@ -229,6 +213,52 @@ fun TaskDetailScreen(
                 }
             }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text("Depends on", style = MaterialTheme.typography.labelLarge)
+            val selectedDependsOnTitle = uiState.availableTasks
+                .firstOrNull { it.id == uiState.dependsOnTaskId }
+                ?.title ?: "None"
+
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = selectedDependsOnTitle,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Depends on") },
+                    trailingIcon = {
+                        Icon(imageVector = Icons.Filled.ArrowDropDown, contentDescription = "Choose a task this depends on")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { dependsOnMenuExpanded = true }
+                )
+                DropdownMenu(
+                    expanded = dependsOnMenuExpanded,
+                    onDismissRequest = { dependsOnMenuExpanded = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("None") },
+                        onClick = {
+                            viewModel.onDependsOnChange(null)
+                            dependsOnMenuExpanded = false
+                        }
+                    )
+                    uiState.availableTasks.forEach { task ->
+                        DropdownMenuItem(
+                            text = { Text(task.title) },
+                            onClick = {
+                                viewModel.onDependsOnChange(task.id)
+                                dependsOnMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
@@ -240,11 +270,7 @@ fun TaskDetailScreen(
         }
     }
 
-    // no longer showDatePicker
     if (activePicker != DatePickerTarget.NONE) {
-
-        // Determine the initial date (in epoch millis UTC)
-        // to pre-fill the date picker based on which date field is being edited
         val initialMillis = when (activePicker) {
             DatePickerTarget.START_DATE ->
                 uiState.startDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
@@ -252,9 +278,8 @@ fun TaskDetailScreen(
             DatePickerTarget.DUE_DATE ->
                 uiState.dueDate.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
-            DatePickerTarget.NONE -> 0L // unreachable
+            DatePickerTarget.NONE -> 0L
         }
-
 
         val datePickerState = rememberDatePickerState(
             initialSelectedDateMillis = initialMillis
