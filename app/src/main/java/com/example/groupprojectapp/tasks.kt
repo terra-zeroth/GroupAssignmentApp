@@ -12,6 +12,6 @@ import com.example.groupprojectapp.tasks.ui.TasksFeature
  * implementation.
  */
 @Composable
-fun TasksScreen(userName: String) {
-    TasksFeature(currentUserName = userName)
+fun TasksScreen(userName: String, onBackClick: () -> Unit) {
+    TasksFeature(currentUserName = userName, onBackToHome = onBackClick)
 }

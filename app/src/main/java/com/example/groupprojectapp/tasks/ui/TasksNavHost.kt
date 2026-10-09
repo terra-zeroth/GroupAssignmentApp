@@ -31,33 +31,36 @@ object TaskRoutes {
 }
 
 /**
- *  * VIEW layer entry point: creates the container and factory once, then
- *  * switches between the list screen and the detail screen.
+ * VIEW layer entry point: creates the container and factory once, then
+ * switches between the list screen and the detail screen.
  *
  * Self-contained navigation for the Tasks feature (list + detail-by-id).
- * This is deliberately its OWN NavHost rather than a change to
- * MainActivity's outer screen switch: it's the only thing that has to be
- * "real" Navigation-Compose navigation for R1 (a detail screen reached by
- * passing an ID, with working back navigation), and keeping it scoped here
- * means it doesn't touch or conflict with anyone else's screens.
- *
  * MainActivity keeps calling `TasksScreen(userName = userName)` exactly as
  * it already does — see tasks.kt, which now just delegates here.
+ *
+ * [onBackToHome] fires when back is pressed while already on the task
+ * list (the root of this feature's own stack) — that's the signal to pop
+ * up to MainActivity's "home" screen, since there's nothing left in this
+ * NavHost's own stack to pop at that point.
  */
 @Composable
-fun TasksFeature(currentUserName: String) {
+fun TasksFeature(currentUserName: String, onBackToHome: () -> Unit) {
     val navController = rememberNavController()
 
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) }
     val factory = remember(container) { taskViewModelFactory(container) }
 
-    // Let the system/gesture back button pop OUR stack (detail -> list)
-    // instead of falling through to whatever the outer app would otherwise
-    // do, since MainActivity has no NavController of its own to catch it.
+    // Pop OUR stack (detail -> list) first; once we're already at the
+    // list, hand control back up to MainActivity via onBackToHome instead
+    // of letting the back press fall through to the OS.
     val backStackEntry by navController.currentBackStackEntryAsState()
-    BackHandler(enabled = backStackEntry?.destination?.route != TaskRoutes.LIST) {
-        navController.popBackStack()
+    BackHandler(enabled = true) {
+        if (backStackEntry?.destination?.route != TaskRoutes.LIST) {
+            navController.popBackStack()
+        } else {
+            onBackToHome()
+        }
     }
 
     NavHost(navController = navController, startDestination = TaskRoutes.LIST) {
@@ -67,16 +70,14 @@ fun TasksFeature(currentUserName: String) {
                 viewModel = viewModel,
                 currentUserName = currentUserName,
                 onTaskClick = { taskId -> navController.navigate(TaskRoutes.detailRoute(taskId)) },
-                onAddTaskClick = { navController.navigate(TaskRoutes.detailRoute(null)) }
+                onAddTaskClick = { navController.navigate(TaskRoutes.detailRoute(null)) },
+                onBackToHome = onBackToHome
             )
         }
         composable(
             route = TaskRoutes.DETAIL_ROUTE,
             arguments = listOf(navArgument(TaskRoutes.DETAIL_ARG) { type = NavType.LongType })
         ) {
-            // This is the "detail screen reached by passing an ID through
-            // the navigation flow" R1 asks for: the taskId argument above
-            // flows into TaskDetailViewModel via SavedStateHandle.
             val viewModel: TaskDetailViewModel = viewModel(factory = factory)
             TaskDetailScreen(
                 viewModel = viewModel,

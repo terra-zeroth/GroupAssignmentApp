@@ -7,9 +7,11 @@ import com.example.groupprojectapp.tasks.data.Member
 import com.example.groupprojectapp.tasks.data.Task
 import com.example.groupprojectapp.tasks.data.TaskPriority
 import com.example.groupprojectapp.tasks.data.TaskRepository
+import com.example.groupprojectapp.tasks.data.TaskStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -21,8 +23,11 @@ data class TaskDetailUiState(
     val dueDate: LocalDate = LocalDate.now(),
     val startDate: LocalDate = LocalDate.now(),
     val priority: TaskPriority = TaskPriority.MEDIUM,
+    val status: TaskStatus = TaskStatus.TODO,
     val assigneeId: Long? = null,
+    val dependsOnTaskId: Long? = null,
     val members: List<Member> = emptyList(),
+    val availableTasks: List<Task> = emptyList(),
     val isNewTask: Boolean = true,
     val isLoading: Boolean = true,
     val titleError: Boolean = false,
@@ -31,18 +36,23 @@ data class TaskDetailUiState(
 
 /**
  * Holds the whole add/edit form in ViewModel state, not local `remember {}`
- * in the composable. That's what makes R1's rotation requirement pass: the
- * Activity recreates on rotation, but this ViewModel instance survives
- * (it's scoped to this NavBackStackEntry via Navigation-Compose), so every
- * field the user typed is still here afterwards — nothing extra has to be
- * done to "handle" rotation, it falls out of where the state lives.
+ * in the composable. That's what makes R1's rotation requirement pass.
  *
- * NOTE for the group: this only fixes rotation *inside* the Tasks feature.
- * MainActivity's own currentScreen/groupName/userName use plain
- * `remember { mutableStateOf(...) }`, which does NOT survive rotation —
- * that resets the whole app back to the Login screen on rotate. That's a
- * 3-line fix (remember -> rememberSaveable) but it's in MainActivity.kt,
- * so it needs whoever owns that file to make it.
+ * BUGFIX: the existing task's fields are now loaded ONCE via
+ * repository.taskById(taskId).first() instead of an ongoing .collect{}.
+ * The old version stayed subscribed to that task's row for the whole time
+ * the form was open, so any background write to it (e.g. our own
+ * syncAutoStatuses() auto "In Progress" job firing on rotation) would
+ * silently overwrite every field in the form — including unsaved
+ * keystrokes in title/description/dates — back to whatever was currently
+ * in the database. Loading once means the form only ever reflects what's
+ * in the database at the moment it opened, plus whatever the user typed
+ * since, and nothing external can clobber it mid-edit.
+ *
+ * [availableTasks] (for the "depends on" picker) is still a live .collect
+ * on purpose — that's just the list of *options* to choose from, not the
+ * user's actual field values, so it's fine (and good) for it to update
+ * live if another task is added while this form is open.
  */
 class TaskDetailViewModel(
     private val repository: TaskRepository,
@@ -63,21 +73,32 @@ class TaskDetailViewModel(
                 _uiState.update { it.copy(members = members) }
             }
         }
+        viewModelScope.launch {
+            repository.allTasks.collect { tasksWithAssignee ->
+                val others = tasksWithAssignee
+                    .map { it.task }
+                    .filter { it.id != taskId }
+                _uiState.update { it.copy(availableTasks = others) }
+            }
+        }
         if (taskId != null) {
             viewModelScope.launch {
-                repository.taskById(taskId).collect { taskWithAssignee ->
-                    val task = taskWithAssignee?.task ?: return@collect
-                    _uiState.update {
-                        it.copy(
-                            title = task.title,
-                            description = task.description,
-                            dueDate = LocalDate.ofEpochDay(task.dueDateEpochDay),
-                            startDate = LocalDate.ofEpochDay(task.startDateEpochDay),
-                            priority = task.priority,
-                            assigneeId = task.assigneeId,
-                            isLoading = false
-                        )
-                    }
+                val task = repository.taskById(taskId).first()?.task ?: run {
+                    _uiState.update { it.copy(isLoading = false) }
+                    return@launch
+                }
+                _uiState.update {
+                    it.copy(
+                        title = task.title,
+                        description = task.description,
+                        dueDate = LocalDate.ofEpochDay(task.dueDateEpochDay),
+                        startDate = LocalDate.ofEpochDay(task.startDateEpochDay),
+                        priority = task.priority,
+                        status = task.status,
+                        assigneeId = task.assigneeId,
+                        dependsOnTaskId = task.dependsOnTaskId,
+                        isLoading = false
+                    )
                 }
             }
         } else {
@@ -93,6 +114,7 @@ class TaskDetailViewModel(
         _uiState.update { it.copy(startDate = value, startDateError = false) }
     fun onPriorityChange(value: TaskPriority) = _uiState.update { it.copy(priority = value) }
     fun onAssigneeChange(value: Long?) = _uiState.update { it.copy(assigneeId = value) }
+    fun onDependsOnChange(value: Long?) = _uiState.update { it.copy(dependsOnTaskId = value) }
 
     fun saveTask(onSaved: () -> Unit) {
         val state = _uiState.value
@@ -105,7 +127,7 @@ class TaskDetailViewModel(
             _uiState.update { it.copy(startDateError = true) }
             return
         }
-        
+
         viewModelScope.launch {
             val task = Task(
                 id = taskId ?: 0,
@@ -113,8 +135,10 @@ class TaskDetailViewModel(
                 description = state.description.trim(),
                 dueDateEpochDay = state.dueDate.toEpochDay(),
                 startDateEpochDay = state.startDate.toEpochDay(),
+                status = state.status,
                 priority = state.priority,
-                assigneeId = state.assigneeId
+                assigneeId = state.assigneeId,
+                dependsOnTaskId = state.dependsOnTaskId
             )
             if (taskId == null){
                 repository.saveTask(task)
