@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
@@ -45,9 +46,9 @@ import java.time.format.DateTimeFormatter
 /**
  * VIEW (MVVM): the to-do list screen.
  *
- * What it shows: a top bar with a sort menu, a row of filter chips (one per
- * team member, for job allocation), an "overdue" banner and the list of
- * tasks. A + button opens the add-task screen.
+ * What it shows: a top bar with a back arrow, a sort menu, a row of filter
+ * chips (one per team member, for job allocation), an "overdue" banner and
+ * the list of tasks. A + button opens the add-task screen.
  *
  * What it does NOT do: no sorting, filtering or database work happens here.
  * It collects [TaskListUiState] from [TaskListViewModel] and only draws it.
@@ -64,7 +65,8 @@ fun TaskListScreen(
     viewModel: TaskListViewModel,
     currentUserName: String,
     onTaskClick: (Long) -> Unit,
-    onAddTaskClick: () -> Unit
+    onAddTaskClick: () -> Unit,
+    onBackToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var sortMenuExpanded by remember { mutableStateOf(false) }
@@ -73,6 +75,11 @@ fun TaskListScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Tasks") },
+                navigationIcon = {
+                    IconButton(onClick = onBackToHome) {
+                        Icon(imageVector = Icons.Filled.ArrowBack, contentDescription = "Back to Home")
+                    }
+                },
                 actions = {
                     Box {
                         IconButton(onClick = { sortMenuExpanded = true }) {

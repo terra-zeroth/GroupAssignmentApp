@@ -23,10 +23,15 @@ class TaskContainer(context: Context) {
     val preferencesRepository = TaskPreferencesRepository(context)
 
     init {
-        // Seed the assignee list from the real login accounts (UserData.kt)
-        // the first time this ever runs, without editing UserData.kt.
         CoroutineScope(Dispatchers.IO).launch {
+            // Seed the assignee list from the real login accounts (UserData.kt)
+            // the first time this ever runs, without editing UserData.kt.
             taskRepository.seedMembersIfEmpty(userDatabase.keys.toList())
+            // Auto-promote TODO -> IN_PROGRESS for any task whose date
+            // window has started (and back again if dates get edited), so
+            // the Timeline's colour coding is correct with no manual step.
+            // DONE always overrides this.
+            taskRepository.syncAutoStatuses()
         }
     }
 }

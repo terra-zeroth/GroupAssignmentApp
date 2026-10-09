@@ -7,6 +7,7 @@ import com.example.groupprojectapp.tasks.data.Member
 import com.example.groupprojectapp.tasks.data.Task
 import com.example.groupprojectapp.tasks.data.TaskPriority
 import com.example.groupprojectapp.tasks.data.TaskRepository
+import com.example.groupprojectapp.tasks.data.TaskStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,6 +22,7 @@ data class TaskDetailUiState(
     val dueDate: LocalDate = LocalDate.now(),
     val startDate: LocalDate = LocalDate.now(),
     val priority: TaskPriority = TaskPriority.MEDIUM,
+    val status: TaskStatus = TaskStatus.TODO,
     val assigneeId: Long? = null,
     val members: List<Member> = emptyList(),
     val isNewTask: Boolean = true,
@@ -37,12 +39,12 @@ data class TaskDetailUiState(
  * field the user typed is still here afterwards — nothing extra has to be
  * done to "handle" rotation, it falls out of where the state lives.
  *
- * NOTE for the group: this only fixes rotation *inside* the Tasks feature.
- * MainActivity's own currentScreen/groupName/userName use plain
- * `remember { mutableStateOf(...) }`, which does NOT survive rotation —
- * that resets the whole app back to the Login screen on rotate. That's a
- * 3-line fix (remember -> rememberSaveable) but it's in MainActivity.kt,
- * so it needs whoever owns that file to make it.
+ * BUGFIX: [status] is now tracked in [TaskDetailUiState] and loaded from
+ * the existing task when editing. Previously saveTask() built a new [Task]
+ * without passing status at all, so it silently fell back to the Task
+ * entity's default (TODO) on every edit — meaning marking something
+ * IN_PROGRESS or DONE and then editing its title/description would wipe
+ * that status back to TODO. New tasks still correctly start at TODO.
  */
 class TaskDetailViewModel(
     private val repository: TaskRepository,
@@ -74,6 +76,7 @@ class TaskDetailViewModel(
                             dueDate = LocalDate.ofEpochDay(task.dueDateEpochDay),
                             startDate = LocalDate.ofEpochDay(task.startDateEpochDay),
                             priority = task.priority,
+                            status = task.status,
                             assigneeId = task.assigneeId,
                             isLoading = false
                         )
@@ -105,7 +108,7 @@ class TaskDetailViewModel(
             _uiState.update { it.copy(startDateError = true) }
             return
         }
-        
+
         viewModelScope.launch {
             val task = Task(
                 id = taskId ?: 0,
@@ -113,6 +116,7 @@ class TaskDetailViewModel(
                 description = state.description.trim(),
                 dueDateEpochDay = state.dueDate.toEpochDay(),
                 startDateEpochDay = state.startDate.toEpochDay(),
+                status = state.status,
                 priority = state.priority,
                 assigneeId = state.assigneeId
             )
