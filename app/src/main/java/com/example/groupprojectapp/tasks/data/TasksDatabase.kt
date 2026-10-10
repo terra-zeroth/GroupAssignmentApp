@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.groupprojectapp.documentation.data.DocumentationDao
+import com.example.groupprojectapp.documentation.data.DocumentationEntry
 
 /**
  * MODEL (data layer): the Room database for the Tasks feature. It holds the
@@ -14,11 +16,12 @@ import androidx.room.RoomDatabase
  * make sure two threads can't create it twice.
  */
 
-@Database(entities = [Task::class, Member::class], version = 2, exportSchema = false)
+@Database(entities = [Task::class, Member::class, DocumentationEntry::class], version = 3, exportSchema = false)
 abstract class TasksDatabase : RoomDatabase() {
 
     abstract fun taskDao(): TaskDao
     abstract fun memberDao(): MemberDao
+    abstract fun documentationDao(): DocumentationDao
 
     companion object {
         @Volatile

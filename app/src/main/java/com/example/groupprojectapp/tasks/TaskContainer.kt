@@ -1,6 +1,7 @@
 package com.example.groupprojectapp.tasks
 
 import android.content.Context
+import com.example.groupprojectapp.documentation.data.DocumentationRepository
 import com.example.groupprojectapp.tasks.data.TaskPreferencesRepository
 import com.example.groupprojectapp.tasks.data.TaskRepository
 import com.example.groupprojectapp.tasks.data.TasksDatabase
@@ -21,6 +22,8 @@ class TaskContainer(context: Context) {
 
     val taskRepository = TaskRepository(database.taskDao(), database.memberDao())
     val preferencesRepository = TaskPreferencesRepository(context)
+
+    val documentationRepository = DocumentationRepository(database.documentationDao())
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
