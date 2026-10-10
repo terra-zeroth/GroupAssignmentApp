@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.groupprojectapp.documentation.ui.add.AddDocumentationScreen
 import com.example.groupprojectapp.login.ui.LoginScreen
 import com.example.groupprojectapp.session.SessionViewModel
 
@@ -58,7 +59,23 @@ class MainActivity : ComponentActivity() {
                 "Timeline" -> TimelineScreen(
                     onBackClick = { sessionViewModel.navigateTo("home")}
                 )
-                "Documentation" -> DocumentationScreen()
+
+                "Documentation" -> DocumentationScreen(
+                    onBackClick = { sessionViewModel.navigateTo("home") },
+                    onAddClick = {
+                        sessionViewModel.navigateTo("DocumentationAdd")
+                    }
+                )
+
+                // new screen for adding new documentation details
+                "DocumentationAdd" ->
+                    AddDocumentationScreen(
+                        onBackClick = { sessionViewModel.navigateTo("Documentation") },
+                        onSaved = { sessionViewModel.navigateTo("Documentation") },
+                        currentUsername = sessionState.userName
+                    )
+
+
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
             }
