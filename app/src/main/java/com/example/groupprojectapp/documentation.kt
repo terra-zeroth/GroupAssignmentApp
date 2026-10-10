@@ -1,8 +1,18 @@
 package com.example.groupprojectapp
 
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import com.example.groupprojectapp.documentation.ui.DocumentationFeature
+
 @Composable
-fun DocumentationScreen() {
-    Text("This is the Documentation screen")
+fun DocumentationScreen(
+    onBackClick: () -> Unit,
+    onAddClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    DocumentationFeature(
+        onBackClick = onBackClick,
+        onAddClick = onAddClick,
+        modifier = modifier
+    )
 }

@@ -58,7 +58,14 @@ class MainActivity : ComponentActivity() {
                 "Timeline" -> TimelineScreen(
                     onBackClick = { sessionViewModel.navigateTo("home")}
                 )
-                "Documentation" -> DocumentationScreen()
+
+                "Documentation" -> DocumentationScreen(
+                    onBackClick = { sessionViewModel.navigateTo("home") },
+                    onAddClick = {
+                        // TODO: open add-entry form
+                    }
+                )
+
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
             }
