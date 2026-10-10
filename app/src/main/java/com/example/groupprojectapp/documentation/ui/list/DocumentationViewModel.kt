@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.documentation.ui
+package com.example.groupprojectapp.documentation.ui.list
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

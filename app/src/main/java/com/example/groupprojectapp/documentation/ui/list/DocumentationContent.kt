@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.documentation.ui
+package com.example.groupprojectapp.documentation.ui.list
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Arrangement

@@ -1,18 +1,17 @@
-package com.example.groupprojectapp
+package com.example.groupprojectapp.documentation.ui.add
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import com.example.groupprojectapp.documentation.ui.list.DocumentationFeature
 
 @Composable
-fun DocumentationScreen(
+fun AddDocumentationScreen(
     onBackClick: () -> Unit,
-    onAddClick: () -> Unit,
+    onSaved: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    DocumentationFeature(
+    AddDocumentationFeature(
         onBackClick = onBackClick,
-        onAddClick = onAddClick,
+        onSaved = onSaved,
         modifier = modifier
     )
 }

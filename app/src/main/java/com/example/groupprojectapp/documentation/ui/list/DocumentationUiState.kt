@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.documentation.ui
+package com.example.groupprojectapp.documentation.ui.list
 
 // isLoading is for a spinner, starts true to show spinner until database starts
 // filterTaskTittle is null when showing all entries
