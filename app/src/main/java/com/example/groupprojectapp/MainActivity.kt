@@ -71,7 +71,8 @@ class MainActivity : ComponentActivity() {
                 "DocumentationAdd" ->
                     AddDocumentationScreen(
                         onBackClick = { sessionViewModel.navigateTo("Documentation") },
-                        onSaved = { sessionViewModel.navigateTo("Documentation") }
+                        onSaved = { sessionViewModel.navigateTo("Documentation") },
+                        currentUsername = sessionState.userName
                     )
 
 

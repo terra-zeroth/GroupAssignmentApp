@@ -11,12 +11,19 @@ class DocumentationRepository(private val documentationDao: DocumentationDao) {
     fun getEntriesForTask(taskId: Long): Flow<List<DocumentationEntryWithTask>> =
         documentationDao.getEntriesForTask(taskId)
 
-    suspend fun addEntry(taskId: Long, date: LocalDate, note: String, imageUri: String? = null) {
+    suspend fun addEntry(
+        taskId: Long,
+        date: LocalDate,
+        note: String,
+        imageUri: String? = null,
+        authorName: String
+    ) {
         val entry = DocumentationEntry(
             taskId = taskId,
             dateEpochDay = date.toEpochDay(),
             note = note,
-            imageUri = imageUri
+            imageUri = imageUri,
+            authorName = authorName
         )
         documentationDao.insertEntry(entry)
     }

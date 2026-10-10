@@ -139,6 +139,13 @@ private fun DocumentationEntryCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
+            // Extra Submission details (date and author)
+            Text(
+                text = "Submitted by ${item.authorName} ",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
             // Date
             Text(
                 text = item.date.toString(),
@@ -167,7 +174,8 @@ val sampleDocumentationItems = listOf(
         taskTitle = "Design Database Schema",
         date = LocalDate.of(2026, 10, 1),
         note = "Finished drafiting the Room entities and intial ER diagram",
-        imageUri = null
+        imageUri = null,
+        authorName = "Manasviba"
     ),
 
     DocumentationEntryItem(
@@ -175,7 +183,8 @@ val sampleDocumentationItems = listOf(
         taskTitle = "UI Component Review",
         date = LocalDate.of(2026, 10, 3),
         note = "Review timeline components with the design team",
-        imageUri = null
+        imageUri = null,
+        authorName = "Aliyah"
     ),
 
     DocumentationEntryItem(
@@ -183,7 +192,8 @@ val sampleDocumentationItems = listOf(
         taskTitle = "Review overall system",
         date = LocalDate.of(2026, 10, 8),
         note = "Double check everything meets the requirements and works without errors",
-        imageUri = null
+        imageUri = null,
+        authorName = "Twisha"
     )
 
 )

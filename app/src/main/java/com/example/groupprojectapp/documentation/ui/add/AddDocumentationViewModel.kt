@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 
 class AddDocumentationViewModel(
     private val documentationRepository: DocumentationRepository,
-    taskRepository: TaskRepository
+    taskRepository: TaskRepository,
+    private val currentUserName: String
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddDocumentationUiState())
@@ -44,10 +46,16 @@ class AddDocumentationViewModel(
         }
     }
 
+    // allow the user to change the date of documentation
+    fun onDateChange(newDate: LocalDate) {
+        _uiState.update { it.copy(date = newDate) }
+    }
+
     fun saveEntry(onSaved: () -> Unit) {
         val currentState = _uiState.value
+        val taskId = currentState.selectedTaskId
 
-        val taskErr = if (currentState.selectedTaskId == null) {
+        val taskErr = if (taskId == null) {
             "Please select a task"
         } else {
             null
@@ -60,19 +68,20 @@ class AddDocumentationViewModel(
         }
 
         if (taskErr != null || noteErr != null) {
-            _uiState.update {
-                it.copy(taskError = taskErr, noteError = noteErr)
-            }
+            _uiState.update { it.copy(taskError = taskErr, noteError = noteErr) }
             return
         }
 
         viewModelScope.launch {
-            documentationRepository.addEntry(
-                taskId = currentState.selectedTaskId!!,
-                date = currentState.date,
-                note = currentState.note.trim(),
-                imageUri = currentState.imageUri
-            )
+            if (taskId != null) {
+                documentationRepository.addEntry(
+                    taskId = taskId,
+                    date = currentState.date,
+                    note = currentState.note.trim(),
+                    imageUri = currentState.imageUri,
+                    authorName = currentUserName // <--- Attached dynamically here
+                )
+            }
             resetForm()
             onSaved()
         }

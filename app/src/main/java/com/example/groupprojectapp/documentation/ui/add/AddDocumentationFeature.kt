@@ -16,7 +16,8 @@ import com.example.groupprojectapp.tasks.TaskContainer
 fun AddDocumentationFeature(
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    currentUsername: String = "Guest",
 ) {
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) }
@@ -26,7 +27,8 @@ fun AddDocumentationFeature(
             initializer {
                 AddDocumentationViewModel(
                     documentationRepository = container.documentationRepository,
-                    taskRepository = container.taskRepository
+                    taskRepository = container.taskRepository,
+                    currentUserName = currentUsername
                 )
             }
         }
@@ -48,6 +50,7 @@ fun AddDocumentationFeature(
         taskOptions = taskOptions,
         onTaskSelected = { viewModel.onTaskSelected(it) },
         onNoteChanged = { viewModel.onNoteChanged(it) },
+        onDateSelected = { viewModel.onDateChange(it) },
         onSaveClick = {
             viewModel.saveEntry {
                 onSaved() // Navigate back upon successful save

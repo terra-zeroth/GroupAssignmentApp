@@ -7,11 +7,13 @@ import androidx.compose.ui.Modifier
 fun AddDocumentationScreen(
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
+    currentUsername: String,
     modifier: Modifier = Modifier
 ) {
     AddDocumentationFeature(
         onBackClick = onBackClick,
         onSaved = onSaved,
+        currentUsername = currentUsername,
         modifier = modifier
     )
 }

@@ -34,7 +34,8 @@ class DocumentationViewModel(
             taskTitle = taskTitle,
             date = LocalDate.ofEpochDay(dateEpochDay),
             note = note,
-            imageUri = imageUri
+            imageUri = imageUri,
+            authorName = authorName
         )
     }
 }

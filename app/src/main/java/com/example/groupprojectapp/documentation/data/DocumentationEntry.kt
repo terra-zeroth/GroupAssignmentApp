@@ -26,5 +26,6 @@ data class DocumentationEntry(
     val taskId: Long,
     val dateEpochDay: Long,
     val note: String,
-    val imageUri: String? = null
+    val imageUri: String? = null,
+    val authorName: String // Stores who submitted it
 )

@@ -9,5 +9,6 @@ data class DocumentationEntryItem(
     val taskTitle: String,
     val date: LocalDate,
     val note: String,
-    val imageUri: String? = null
+    val imageUri: String? = null,
+    val authorName: String
 )

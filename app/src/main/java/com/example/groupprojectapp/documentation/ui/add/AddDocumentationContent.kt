@@ -1,6 +1,7 @@
 package com.example.groupprojectapp.documentation.ui.add
 
 import android.content.res.Configuration
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -12,7 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,10 +25,13 @@ fun AddDocumentationContent(
     taskOptions: List<TaskOption>,
     onTaskSelected: (Long) -> Unit,
     onNoteChanged: (String) -> Unit,
+    onDateSelected: (LocalDate) -> Unit,
     onSaveClick: () -> Unit,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var showDatePicker by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -59,7 +66,6 @@ fun AddDocumentationContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
             } else {
-                // Simple dropdown or radio group representation for task selection
                 taskOptions.forEach { task ->
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -73,9 +79,9 @@ fun AddDocumentationContent(
                     }
                 }
 
-                if (uiState.taskError != null) {
+                uiState.taskError?.let { error ->
                     Text(
-                        text = uiState.taskError!!,
+                        text = error,
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -84,14 +90,21 @@ fun AddDocumentationContent(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Date Display
-            OutlinedTextField(
-                value = uiState.date.toString(),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Date") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Date Display Field
+            Text("Date", style = MaterialTheme.typography.labelLarge)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = uiState.date.format(DateTimeFormatter.ofPattern("d MMM yyyy")),
+                    onValueChange = {},
+                    readOnly = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable { showDatePicker = true }
+                )
+            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -102,8 +115,8 @@ fun AddDocumentationContent(
                 label = { Text("Note *") },
                 isError = uiState.noteError != null,
                 supportingText = {
-                    if (uiState.noteError != null) {
-                        Text(text = uiState.noteError!!)
+                    uiState.noteError?.let { error ->
+                        Text(text = error)
                     }
                 },
                 minLines = 4,
@@ -119,13 +132,43 @@ fun AddDocumentationContent(
             ) {
                 Text("Save Entry")
             }
+        }
+    }
 
+    // Date Picker Dialog Overlay
+    if (showDatePicker) {
+        val initialMillis = uiState.date
+            .atStartOfDay(ZoneOffset.UTC)
+            .toInstant()
+            .toEpochMilli()
 
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = initialMillis
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val selectedDate = Instant.ofEpochMilli(millis)
+                            .atZone(ZoneOffset.UTC)
+                            .toLocalDate()
+                        onDateSelected(selectedDate)
+                    }
+                    showDatePicker = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }
-
-// REVIEWS =======================
 
 // ==========================================
 // PREVIEWS
@@ -147,43 +190,7 @@ fun AddDocumentationContentPreview() {
             ),
             onTaskSelected = {},
             onNoteChanged = {},
-            onSaveClick = {},
-            onBackClick = {}
-        )
-    }
-}
-
-@Preview(name = "Error State", showBackground = true)
-@Composable
-fun AddDocumentationContentErrorPreview() {
-    GroupProjectAppTheme {
-        AddDocumentationContent(
-            uiState = AddDocumentationUiState(
-                selectedTaskId = null,
-                note = "",
-                taskError = "Please select a task",
-                noteError = "Note cannot be blank"
-            ),
-            taskOptions = listOf(
-                TaskOption(1L, "Design Architecture")
-            ),
-            onTaskSelected = {},
-            onNoteChanged = {},
-            onSaveClick = {},
-            onBackClick = {}
-        )
-    }
-}
-
-@Preview(name = "No Tasks State", showBackground = true)
-@Composable
-fun AddDocumentationContentEmptyTasksPreview() {
-    GroupProjectAppTheme {
-        AddDocumentationContent(
-            uiState = AddDocumentationUiState(),
-            taskOptions = emptyList(),
-            onTaskSelected = {},
-            onNoteChanged = {},
+            onDateSelected = {},
             onSaveClick = {},
             onBackClick = {}
         )

@@ -8,5 +8,6 @@ data class DocumentationEntryWithTask(
     val dateEpochDay: Long,
     val note: String,
     val imageUri: String?,
+    val authorName: String,
     @ColumnInfo(name = "taskTitle") val taskTitle: String
 )
