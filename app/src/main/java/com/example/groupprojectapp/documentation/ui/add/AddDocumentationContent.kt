@@ -7,11 +7,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.Instant
 import java.time.LocalDate
@@ -28,6 +31,8 @@ fun AddDocumentationContent(
     onDateSelected: (LocalDate) -> Unit,
     onSaveClick: () -> Unit,
     onBackClick: () -> Unit,
+    onAttachImageClick: () -> Unit,
+    onRemoveImageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
@@ -125,6 +130,36 @@ fun AddDocumentationContent(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Screenshot Attachment Section
+            if (uiState.imageUri == null) {
+                OutlinedButton(
+                    onClick = onAttachImageClick,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(imageVector = Icons.Default.Add, contentDescription = null)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Attach screenshot")
+                }
+            } else {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    AsyncImage(
+                        model = uiState.imageUri,
+                        contentDescription = "Attached screenshot",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                    )
+                    TextButton(
+                        onClick = onRemoveImageClick,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Remove screenshot", color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Save Button
             Button(
                 onClick = onSaveClick,
@@ -192,7 +227,9 @@ fun AddDocumentationContentPreview() {
             onNoteChanged = {},
             onDateSelected = {},
             onSaveClick = {},
-            onBackClick = {}
+            onBackClick = {},
+            onAttachImageClick = {},
+            onRemoveImageClick = {}
         )
     }
 }

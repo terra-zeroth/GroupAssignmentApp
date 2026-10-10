@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil3.compose.AsyncImage
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.LocalDate
 
@@ -141,14 +142,14 @@ private fun DocumentationEntryCard(
 
             // Extra Submission details (date and author)
             Text(
-                text = "Submitted by ${item.authorName} ",
-                style = MaterialTheme.typography.bodySmall,
+                text = item.date.toString(),
+                style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            // Date
+            // Author name near the date
             Text(
-                text = item.date.toString(),
+                text = "Added by ${item.authorName}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -161,7 +162,17 @@ private fun DocumentationEntryCard(
                 style = MaterialTheme.typography.bodyMedium
             )
 
-
+            // Only show the image if one was attached
+            item.imageUri?.let { uri ->
+                Spacer(modifier = Modifier.height(8.dp))
+                AsyncImage(
+                    model = uri,
+                    contentDescription = "Screenshot for this entry",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                )
+            }
         }
     }
 }

@@ -61,6 +61,10 @@ dependencies {
     implementation("androidx.room:room-ktx:2.8.5")
     ksp("androidx.room:room-compiler:2.8.5")
     implementation("androidx.datastore:datastore-preferences:1.2.1")
+
+    // for Documentation Screenshots:
+    implementation("io.coil-kt.coil3:coil-compose:3.3.0")
+
     // --- End additions ---
 
     testImplementation(libs.junit)

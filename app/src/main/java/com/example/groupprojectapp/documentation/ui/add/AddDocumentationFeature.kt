@@ -1,6 +1,10 @@
 package com.example.groupprojectapp.documentation.ui.add
 
+import android.content.Intent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -17,7 +21,7 @@ fun AddDocumentationFeature(
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
     modifier: Modifier = Modifier,
-    currentUsername: String = "Guest",
+    currentUsername: String
 ) {
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) }
@@ -27,8 +31,7 @@ fun AddDocumentationFeature(
             initializer {
                 AddDocumentationViewModel(
                     documentationRepository = container.documentationRepository,
-                    taskRepository = container.taskRepository,
-                    currentUserName = currentUsername
+                    taskRepository = container.taskRepository
                 )
             }
         }
@@ -37,6 +40,22 @@ fun AddDocumentationFeature(
     val viewModel: AddDocumentationViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsState()
     val taskOptions by viewModel.taskOptions.collectAsState()
+
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
+            viewModel.onImagePicked(uri.toString())
+        }
+    }
 
     val handleBack: () -> Unit = {
         viewModel.resetForm()
@@ -52,11 +71,17 @@ fun AddDocumentationFeature(
         onNoteChanged = { viewModel.onNoteChanged(it) },
         onDateSelected = { viewModel.onDateChange(it) },
         onSaveClick = {
-            viewModel.saveEntry {
-                onSaved() // Navigate back upon successful save
+            viewModel.saveEntry(currentUsername) { // Passes the fresh logged-in username here!
+                onSaved()
             }
         },
         onBackClick = handleBack,
+        onAttachImageClick = {
+            photoPickerLauncher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        },
+        onRemoveImageClick = { viewModel.onImageRemoved() },
         modifier = modifier
     )
 }

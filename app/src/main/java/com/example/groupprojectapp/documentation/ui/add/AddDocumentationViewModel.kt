@@ -16,8 +16,7 @@ import java.time.LocalDate
 
 class AddDocumentationViewModel(
     private val documentationRepository: DocumentationRepository,
-    taskRepository: TaskRepository,
-    private val currentUserName: String
+    taskRepository: TaskRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddDocumentationUiState())
@@ -51,21 +50,22 @@ class AddDocumentationViewModel(
         _uiState.update { it.copy(date = newDate) }
     }
 
-    fun saveEntry(onSaved: () -> Unit) {
+    // called when an image is successfully picked from the gallery
+    fun onImagePicked(uriString: String) {
+        _uiState.update { it.copy(imageUri = uriString) }
+    }
+
+    // called when the user removes the attached image
+    fun onImageRemoved() {
+        _uiState.update { it.copy(imageUri = null) }
+    }
+
+    fun saveEntry(currentUserName: String, onSaved: () -> Unit) {
         val currentState = _uiState.value
         val taskId = currentState.selectedTaskId
 
-        val taskErr = if (taskId == null) {
-            "Please select a task"
-        } else {
-            null
-        }
-
-        val noteErr = if (currentState.note.isBlank()) {
-            "Note cannot be blank"
-        } else {
-            null
-        }
+        val taskErr = if (taskId == null) "Please select a task" else null
+        val noteErr = if (currentState.note.isBlank()) "Note cannot be blank" else null
 
         if (taskErr != null || noteErr != null) {
             _uiState.update { it.copy(taskError = taskErr, noteError = noteErr) }
@@ -79,7 +79,7 @@ class AddDocumentationViewModel(
                     date = currentState.date,
                     note = currentState.note.trim(),
                     imageUri = currentState.imageUri,
-                    authorName = currentUserName // <--- Attached dynamically here
+                    authorName = currentUserName // Passed right at save time
                 )
             }
             resetForm()
