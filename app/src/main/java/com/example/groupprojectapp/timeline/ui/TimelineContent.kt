@@ -14,20 +14,28 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.groupprojectapp.tasks.data.TaskStatus
 import com.example.groupprojectapp.timeline.ui.components.EmptyTimelineState
 import com.example.groupprojectapp.timeline.ui.components.TimelineLeftPane
 import com.example.groupprojectapp.timeline.ui.components.TimelineLegend
 import com.example.groupprojectapp.timeline.ui.components.TimelineRightPane
+import com.example.groupprojectapp.timeline.ui.components.TimelineTaskSheet
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.LocalDate
 
@@ -79,8 +87,13 @@ import java.time.LocalDate
 fun TimelineContent(
     uiState: TimelineUiState,
     onBackClick: () -> Unit,
+    onOpenDocs: (Long) -> Unit,
     modifier: Modifier = Modifier
 ){
+    // UI-only state: which task's details sheet is open (null = closed).
+    // rememberSaveable so it survives rotation, like activePicker in the task form.
+    var sheetTaskId by rememberSaveable { mutableStateOf<Long?>(null) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -135,6 +148,14 @@ fun TimelineContent(
                     // Legend placed inside the chart branch above the scroll container
                     TimelineLegend()
 
+                    // Hint so users know the bars and labels are tappable
+                    Text(
+                        text = "Tap a task or its bar to see details and open its documentation.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    )
+
                     // VERTICAL SCROLL CONTAINER (Links left and right panes together)
                     Row(
                         modifier = Modifier
@@ -145,7 +166,8 @@ fun TimelineContent(
                         TimelineLeftPane(
                             items = uiState.items,
                             headerHeight = headerHeightDp,
-                            rowHeight = rowHeightDp
+                            rowHeight = rowHeightDp,
+                            onItemClick = { taskId -> sheetTaskId = taskId }
                         )
 
                         // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
@@ -158,16 +180,39 @@ fun TimelineContent(
                             dayWidth = dayWidthDp,
                             todayOffset = uiState.todayOffset,
                             horizontalScrollState = horizontalScrollState,
+                            onItemClick = { taskId -> sheetTaskId = taskId },
                             modifier = Modifier.weight(1f)
                         )
                     }
                 }
             }
         }
+
+        // TASK DETAILS SHEET
+        // Find the tapped task. If it was deleted while open, nothing is found
+        // and the sheet simply disappears, with no crash.
+        val sheetItem = uiState.items.find { it.taskId == sheetTaskId }
+
+        sheetItem?.let { item ->
+            ModalBottomSheet(
+                onDismissRequest = { sheetTaskId = null } // swipe down / tap outside
+            ) {
+                TimelineTaskSheet(
+                    item = item,
+                    onOpenDocsClick = {
+                        sheetTaskId = null // close first...
+                        onOpenDocs(item.taskId) // ...then navigate
+                    }
+                )
+            }
+        }
+
+
     }
 }
 
 // SHARED SAMPLE DATA FOR PREVIEWS
+// Dates match each item's offset from firstDate (1 Oct): offset 0 = 1 Oct
 private val sampleTimelineUiState = TimelineUiState(
     isLoading = false,
     todayOffset = 3,
@@ -176,6 +221,8 @@ private val sampleTimelineUiState = TimelineUiState(
     items = listOf(
         TimelineItem(
             taskId = 1L,
+            startDate = LocalDate.of(2026, 10, 1),     // ← new (offset 0)
+            dueDate = LocalDate.of(2026, 10, 1),       // ← new (length 1)
             title = "Task 1",
             startOffsetDays = 0,
             lengthDays = 1,
@@ -185,6 +232,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 2L,
+            startDate = LocalDate.of(2026, 10, 3),     // ← new (offset 2)
+            dueDate = LocalDate.of(2026, 10, 5),       // ← new (length 3)
             title = "Task 2",
             startOffsetDays = 2,
             lengthDays = 3,
@@ -194,6 +243,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 3L,
+            startDate = LocalDate.of(2026, 10, 2),     // ← new (offset 1)
+            dueDate = LocalDate.of(2026, 10, 9),       // ← new (length 8)
             title = "Task 3",
             startOffsetDays = 1,
             lengthDays = 8,
@@ -203,6 +254,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 4L,
+            startDate = LocalDate.of(2026, 10, 1),     // ← new (offset 0)
+            dueDate = LocalDate.of(2026, 10, 2),       // ← new (length 2)
             title = "Task 4",
             startOffsetDays = 0,
             lengthDays = 2,
@@ -226,7 +279,11 @@ private val sampleTimelineUiState = TimelineUiState(
 @Composable
 private fun TimelineContentThemePreview() {
     GroupProjectAppTheme {
-        TimelineContent(uiState = sampleTimelineUiState, onBackClick = {})
+        TimelineContent(
+            uiState = sampleTimelineUiState,
+            onBackClick = {},
+            onOpenDocs = {}
+        )
     }
 }
 
@@ -240,7 +297,8 @@ private fun TimelineContentEmptyPreview(){
                 isLoading = false,
                 items = emptyList()
             ),
-            onBackClick = {}
+            onBackClick = {},
+            onOpenDocs = {}
         )
     }
 }
@@ -255,7 +313,8 @@ private fun TimelineContentLoadingPreview(){
                 isLoading = true,
                 items = emptyList()
             ),
-            onBackClick = {}
+            onBackClick = {},
+            onOpenDocs = {}
         )
     }
 }
@@ -265,6 +324,10 @@ private fun TimelineContentLoadingPreview(){
 @Composable
 private fun TimelineContentSkeletonPreview() {
     GroupProjectAppTheme {
-        TimelineContent(uiState = sampleTimelineUiState, onBackClick = {})
+        TimelineContent(
+            uiState = sampleTimelineUiState,
+            onBackClick = {},
+            onOpenDocs = {}
+        )
     }
 }

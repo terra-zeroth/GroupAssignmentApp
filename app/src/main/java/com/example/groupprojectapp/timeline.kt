@@ -14,7 +14,11 @@ import com.example.groupprojectapp.timeline.ui.TimelineFeature
 @Composable
 fun TimelineScreen(
     onBackClick: () -> Unit,
+    onOpenDocs: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    TimelineFeature(onBackClick = onBackClick, modifier = modifier)
+    TimelineFeature(
+        onBackClick = onBackClick,
+        onOpenDocs = onOpenDocs,
+        modifier = modifier)
 }

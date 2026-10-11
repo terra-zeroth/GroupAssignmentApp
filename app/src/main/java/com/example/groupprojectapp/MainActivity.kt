@@ -64,7 +64,10 @@ class MainActivity : ComponentActivity() {
                 )
 
                 "Timeline" -> TimelineScreen(
-                    onBackClick = { sessionViewModel.navigateTo("home")}
+                    onBackClick = { sessionViewModel.navigateTo("home")},
+                    onOpenDocs = { taskId ->
+                        sessionViewModel.openDocumentationForTask(taskId)
+                    }
                 )
 
                 "Documentation" -> DocumentationScreen(
