@@ -27,4 +27,27 @@ class DocumentationRepository(private val documentationDao: DocumentationDao) {
         )
         documentationDao.insertEntry(entry)
     }
+
+    suspend fun getEntry(id: Long): DocumentationEntry? {
+        return documentationDao.getEntryById(id)
+    }
+
+    suspend fun updateEntry(
+        id: Long,
+        taskId: Long,
+        date: LocalDate,
+        note: String,
+        imageUri: String?,
+        authorName: String
+    ) {
+        val entry = DocumentationEntry(
+            id = id,
+            taskId = taskId,
+            dateEpochDay = date.toEpochDay(),
+            note = note,
+            imageUri = imageUri,
+            authorName = authorName
+        )
+        documentationDao.updateEntry(entry)
+    }
 }

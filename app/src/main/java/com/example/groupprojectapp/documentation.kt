@@ -8,11 +8,13 @@ import com.example.groupprojectapp.documentation.ui.list.DocumentationFeature
 fun DocumentationScreen(
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
+    onEntryClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     DocumentationFeature(
         onBackClick = onBackClick,
         onAddClick = onAddClick,
+        onEntryClick = onEntryClick,
         modifier = modifier
     )
 }

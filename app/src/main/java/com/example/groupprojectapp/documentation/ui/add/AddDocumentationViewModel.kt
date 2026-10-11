@@ -60,26 +60,40 @@ class AddDocumentationViewModel(
         _uiState.update { it.copy(imageUri = null) }
     }
 
+    // ONE saveEntry that handles both add and edit
     fun saveEntry(currentUserName: String, onSaved: () -> Unit) {
-        val currentState = _uiState.value
-        val taskId = currentState.selectedTaskId
+        val state = _uiState.value
+        val taskId = state.selectedTaskId
 
         val taskErr = if (taskId == null) "Please select a task" else null
-        val noteErr = if (currentState.note.isBlank()) "Note cannot be blank" else null
+        val noteErr = if (state.note.isBlank()) "Note cannot be blank" else null
 
-        if (taskErr != null || noteErr != null) {
+        if (taskId == null || noteErr != null) {
             _uiState.update { it.copy(taskError = taskErr, noteError = noteErr) }
             return
         }
+        // taskId is now smart-cast to Long
 
         viewModelScope.launch {
-            if (taskId != null) {
+            val entryId = state.editingEntryId
+            if (entryId == null) {
+                // add mode: logged-in user is the author
                 documentationRepository.addEntry(
                     taskId = taskId,
-                    date = currentState.date,
-                    note = currentState.note.trim(),
-                    imageUri = currentState.imageUri,
-                    authorName = currentUserName // Passed right at save time
+                    date = state.date,
+                    note = state.note.trim(),
+                    imageUri = state.imageUri,
+                    authorName = currentUserName
+                )
+            } else {
+                // edit mode: keep the original author
+                documentationRepository.updateEntry(
+                    id = entryId,
+                    taskId = taskId,
+                    date = state.date,
+                    note = state.note.trim(),
+                    imageUri = state.imageUri,
+                    authorName = state.authorName
                 )
             }
             resetForm()
@@ -89,5 +103,25 @@ class AddDocumentationViewModel(
 
     fun resetForm() {
         _uiState.value = AddDocumentationUiState()
+    }
+
+    fun loadEntry(entryId: Long) {
+        // if already editing this entry, don't reload (protects against rotation)
+        if (_uiState.value.editingEntryId == entryId) return
+
+        viewModelScope.launch {
+            documentationRepository.getEntry(entryId)?.let { entry ->
+                _uiState.update { state ->
+                    state.copy(
+                        selectedTaskId = entry.taskId,
+                        date = LocalDate.ofEpochDay(entry.dateEpochDay),
+                        note = entry.note,
+                        imageUri = entry.imageUri,
+                        authorName = entry.authorName,
+                        editingEntryId = entry.id
+                    )
+                }
+            }
+        }
     }
 }

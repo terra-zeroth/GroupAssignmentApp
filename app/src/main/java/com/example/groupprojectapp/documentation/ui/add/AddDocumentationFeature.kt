@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -18,10 +19,11 @@ import com.example.groupprojectapp.tasks.TaskContainer
 
 @Composable
 fun AddDocumentationFeature(
+    entryId: Long?,
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
     modifier: Modifier = Modifier,
-    currentUsername: String
+    currentUsername: String,
 ) {
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) }
@@ -40,6 +42,12 @@ fun AddDocumentationFeature(
     val viewModel: AddDocumentationViewModel = viewModel(factory = factory)
     val uiState by viewModel.uiState.collectAsState()
     val taskOptions by viewModel.taskOptions.collectAsState()
+
+    // trigger loading once when opened with a valid entry ID
+    // which protects against rotation with the ViewModel guard
+    LaunchedEffect(entryId) {
+        entryId?.let { viewModel.loadEntry(it) }
+    }
 
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()

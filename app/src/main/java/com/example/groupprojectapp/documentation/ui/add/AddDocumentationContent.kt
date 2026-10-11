@@ -37,10 +37,15 @@ fun AddDocumentationContent(
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
 
+    val isEditing = uiState.editingEntryId != null
+    // determine title and button based on mode
+    val screenTitle = if (isEditing) "Edit Documentation Entry" else "New Documentation Entry"
+    val saveButtonText = if (isEditing) "Save Changes" else "Save Entry"
+
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("New Documentation Entry") },
+                title = { Text(screenTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -165,7 +170,7 @@ fun AddDocumentationContent(
                 onClick = onSaveClick,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save Entry")
+                Text(text = saveButtonText)
             }
         }
     }

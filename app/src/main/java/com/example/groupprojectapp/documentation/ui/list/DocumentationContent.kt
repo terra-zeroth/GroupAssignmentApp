@@ -42,6 +42,7 @@ fun DocumentationContent(
     uiState: DocumentationUiState,
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
+    onEntryClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ){
     Scaffold(
@@ -73,6 +74,8 @@ fun DocumentationContent(
 
         modifier = modifier
     ) { innerPadding ->
+
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -107,11 +110,22 @@ fun DocumentationContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
                     ){
+                        item {
+                            Text(
+                                text = "Tap an entry to edit it.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
                         items(
                             items = uiState.entries,
                             key = { entry -> entry.id }
                         ){ item ->
-                            DocumentationEntryCard(item = item)
+                            DocumentationEntryCard(
+                                item = item,
+                                onEntryClick = onEntryClick
+                            )
                         }
                     }
 
@@ -125,9 +139,11 @@ fun DocumentationContent(
 @Composable
 private fun DocumentationEntryCard(
     item: DocumentationEntryItem,
+    onEntryClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ){
     Card(
+        onClick = { onEntryClick(item.id)},
         modifier = modifier.fillMaxWidth()
     ){
         Column(modifier = Modifier.padding(16.dp)){
@@ -224,7 +240,8 @@ private fun PreviewDocumentationContentList() {
                 entries = sampleDocumentationItems
             ),
             onBackClick = {},
-            onAddClick = {}
+            onAddClick = {},
+            onEntryClick = {}
         )
     }
 }
@@ -241,7 +258,8 @@ private fun PreviewDocumentationContentFiltered() {
                 filterTaskTitle = "Design Database Schema"
             ),
             onBackClick = {},
-            onAddClick = {}
+            onAddClick = {},
+            onEntryClick = {}
         )
     }
 }
@@ -257,7 +275,8 @@ private fun PreviewDocumentationContentLoading() {
                 entries = emptyList()
             ),
             onBackClick = {},
-            onAddClick = {}
+            onAddClick = {},
+            onEntryClick = {}
         )
     }
 }
@@ -273,7 +292,8 @@ private fun PreviewDocumentationContentEmpty() {
                 entries = emptyList()
             ),
             onBackClick = {},
-            onAddClick = {}
+            onAddClick = {},
+            onEntryClick = {}
         )
     }
 }

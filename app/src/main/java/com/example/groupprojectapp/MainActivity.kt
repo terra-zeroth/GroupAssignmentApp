@@ -63,16 +63,24 @@ class MainActivity : ComponentActivity() {
                 "Documentation" -> DocumentationScreen(
                     onBackClick = { sessionViewModel.navigateTo("home") },
                     onAddClick = {
-                        sessionViewModel.navigateTo("DocumentationAdd")
+                        // sessionViewModel.navigateTo("DocumentationAdd")
+
+                        // clear any old ID and open empty form for a new entry
+                        sessionViewModel.openDocumentationEditor(null)
+                    },
+                    onEntryClick = { entryId ->
+                        // Pass the tapped entry's ID to load it into the editor
+                        sessionViewModel.openDocumentationEditor(entryId)
                     }
                 )
 
                 // new screen for adding new documentation details
                 "DocumentationAdd" ->
                     AddDocumentationScreen(
+                        entryId = sessionState.selectedEntryId,
                         onBackClick = { sessionViewModel.navigateTo("Documentation") },
                         onSaved = { sessionViewModel.navigateTo("Documentation") },
-                        currentUsername = sessionState.userName
+                        currentUsername = sessionState.userName,
                     )
 
 

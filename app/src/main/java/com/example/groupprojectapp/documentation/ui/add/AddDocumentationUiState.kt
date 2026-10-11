@@ -8,5 +8,7 @@ data class AddDocumentationUiState(
     val note: String = "",
     val taskError: String? = null,
     val noteError: String? = null,
-    val imageUri: String? = null
+    val imageUri: String? = null,
+    val authorName: String = "",
+    val editingEntryId: Long? = null,
 )

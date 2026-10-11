@@ -16,6 +16,7 @@ import com.example.groupprojectapp.tasks.TaskContainer
 fun DocumentationFeature(
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
+    onEntryClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     BackHandler(onBack = onBackClick)
@@ -38,6 +39,7 @@ fun DocumentationFeature(
         uiState = uiState,
         onBackClick = onBackClick,
         onAddClick = onAddClick,
+        onEntryClick = onEntryClick,
         modifier = modifier
     )
 }

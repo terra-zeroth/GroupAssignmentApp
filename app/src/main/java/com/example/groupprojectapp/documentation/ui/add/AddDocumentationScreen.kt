@@ -8,12 +8,14 @@ fun AddDocumentationScreen(
     onBackClick: () -> Unit,
     onSaved: () -> Unit,
     currentUsername: String,
+    entryId: Long?,
     modifier: Modifier = Modifier
 ) {
     AddDocumentationFeature(
         onBackClick = onBackClick,
         onSaved = onSaved,
         currentUsername = currentUsername,
+        entryId = entryId,
         modifier = modifier
     )
 }
