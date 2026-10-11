@@ -12,13 +12,30 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 
+/**
+ * VIEWMODEL (MVVM):
+ * turns documentation entries from the database into
+ * [DocumentationUiState] for the list screen.
+ *
+ * taskId decides what is shown: null = all entries (opened from Home);
+ * an id = only that task's entries (opened from the timeline, A5).
+ * Filtering happens in the DAO query, never in the composable (R2).
+ *
+ * The entries are combined with the task list so the top bar can show the
+ * filtered task's title even before it has any entries.
+ *
+ * stateIn starts with DocumentationUiState() (isLoading = true) and keeps
+ * the database flows alive for 5 seconds after the screen stops listening,
+ * so a rotation doesn't restart the queries.
+ */
+
 class DocumentationViewModel(
     repository: DocumentationRepository,
     taskRepository: TaskRepository,
     private val taskId: Long? = null
 ) : ViewModel() {
 
-    // pick the query based on whether filtering
+    // Pick the query once: one task's entries, or all of them
     private val entriesFlow =
         if (taskId == null) repository.allEntriesWithTask
         else repository.getEntriesForTask(taskId)
@@ -45,6 +62,8 @@ class DocumentationViewModel(
             initialValue = DocumentationUiState()
         )
 
+    // Converts a database row into what one card displays:
+    // epoch day -> LocalDate; everything else is copied across
     private fun DocumentationEntryWithTask.toUiItem(): DocumentationEntryItem {
         return DocumentationEntryItem(
             id = id,
