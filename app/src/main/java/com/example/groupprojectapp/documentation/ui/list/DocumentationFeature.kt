@@ -14,6 +14,7 @@ import com.example.groupprojectapp.tasks.TaskContainer
 
 @Composable
 fun DocumentationFeature(
+    taskId: Long?,
     onBackClick: () -> Unit,
     onAddClick: () -> Unit,
     onEntryClick: (Long) -> Unit,
@@ -24,15 +25,22 @@ fun DocumentationFeature(
     val context = LocalContext.current.applicationContext
     val container = remember { TaskContainer(context) }
 
-    val factory = remember {
+    val factory = remember(taskId) {
         viewModelFactory {
             initializer {
-                DocumentationViewModel(container.documentationRepository)
+                DocumentationViewModel(
+                    repository = container.documentationRepository,
+                    taskRepository = container.taskRepository,
+                    taskId = taskId
+                )
             }
         }
     }
 
-    val viewModel: DocumentationViewModel = viewModel(factory = factory)
+    val viewModel: DocumentationViewModel = viewModel(
+        key = "documentation-${taskId ?: "all"}",
+        factory = factory
+    )
     val uiState by viewModel.uiState.collectAsState()
 
     DocumentationContent(

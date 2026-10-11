@@ -95,7 +95,10 @@ fun DocumentationContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No documentation entries found.\nTap + to add an entry.",
+                            text = if (uiState.filterTaskTitle != null)
+                                "No entries for this task yet.\nTap + to add one."
+                            else
+                                "No documentation entries found.\nTap + to add an entry.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -290,6 +293,24 @@ private fun PreviewDocumentationContentEmpty() {
             uiState = DocumentationUiState(
                 isLoading = false,
                 entries = emptyList()
+            ),
+            onBackClick = {},
+            onAddClick = {},
+            onEntryClick = {}
+        )
+    }
+}
+
+// 5. Empty filtered state preview for when pressed on timeline
+@Preview(showBackground = true, name = "Filtered - Empty")
+@Composable
+private fun PreviewDocumentationContentFilteredEmpty() {
+    GroupProjectAppTheme {
+        DocumentationContent(
+            uiState = DocumentationUiState(
+                isLoading = false,
+                entries = emptyList(),
+                filterTaskTitle = "Design Database Schema"
             ),
             onBackClick = {},
             onAddClick = {},
