@@ -98,6 +98,8 @@ class TimelineViewModel(
 
                 TimelineItem(
                     taskId = task.id,
+                    startDate = LocalDate.ofEpochDay(task.startDateEpochDay),
+                    dueDate = LocalDate.ofEpochDay(task.dueDateEpochDay),
                     title = task.title,
                     status = task.status,
                     assigneeName = assigneeName,

@@ -34,7 +34,29 @@ import coil3.compose.AsyncImage
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.LocalDate
 
-
+/**
+ * VIEW (MVVM):
+ * the Documentation log screen (A3).
+ *
+ * Shows:
+ * a top bar with Back (titled with the task's name when filtered,
+ * A5), a + button to add an entry, then one of three states: loading
+ * spinner, empty message, or a LazyColumn of entry cards (task title,
+ * date, author, note, and screenshot if attached). Tapping a card opens
+ * it for editing.
+ *
+ * Does NOT:
+ * query, filter or convert anything. It draws
+ * [DocumentationUiState] and reports clicks through onBackClick,
+ * onAddClick and onEntryClick, so the previews can supply fake state.
+ *
+ * LazyColumn because the number of entries keeps growing;
+ * it only composes the cards on screen.
+ *
+ * Accessibility (R5):
+ * icon-only buttons have content descriptions; text uses Material type styles
+ * so it scales with the user's font size.
+ */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -95,7 +117,10 @@ fun DocumentationContent(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No documentation entries found.\nTap + to add an entry.",
+                            text = if (uiState.filterTaskTitle != null)
+                                "No entries for this task yet.\nTap + to add one."
+                            else
+                                "No documentation entries found.\nTap + to add an entry.",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -110,6 +135,7 @@ fun DocumentationContent(
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                         modifier = Modifier.fillMaxSize()
                     ){
+
                         item {
                             Text(
                                 text = "Tap an entry to edit it.",
@@ -118,6 +144,8 @@ fun DocumentationContent(
                             )
                         }
 
+                        // key = entry id, so Compose keeps each card's state matched to the right
+                        // entry when the list changes
                         items(
                             items = uiState.entries,
                             key = { entry -> entry.id }
@@ -290,6 +318,24 @@ private fun PreviewDocumentationContentEmpty() {
             uiState = DocumentationUiState(
                 isLoading = false,
                 entries = emptyList()
+            ),
+            onBackClick = {},
+            onAddClick = {},
+            onEntryClick = {}
+        )
+    }
+}
+
+// 5. Empty filtered state preview for when pressed on timeline
+@Preview(showBackground = true, name = "Filtered - Empty")
+@Composable
+private fun PreviewDocumentationContentFilteredEmpty() {
+    GroupProjectAppTheme {
+        DocumentationContent(
+            uiState = DocumentationUiState(
+                isLoading = false,
+                entries = emptyList(),
+                filterTaskTitle = "Design Database Schema"
             ),
             onBackClick = {},
             onAddClick = {},

@@ -1,9 +1,16 @@
 package com.example.groupprojectapp.documentation.ui.list
 
-// isLoading is for a spinner, starts true to show spinner until database starts
-// filterTaskTittle is null when showing all entries
-//  which is set when screen is opened from one task on the timeline
-
+/**
+ * UI STATE (MVVM):
+ * the complete state of the Documentation list screen,
+ * exposed by DocumentationViewModel as a StateFlow and drawn by
+ * DocumentationContent.
+ *
+ * isLoading starts true so a spinner shows until the database answers.
+ * filterTaskTitle is null when showing all entries; it is set when the
+ * screen is opened from one task on the timeline (A5), and is also shown
+ * as the top bar title.
+ */
 data class DocumentationUiState(
     val isLoading: Boolean = true,
     val entries: List<DocumentationEntryItem> = emptyList(),

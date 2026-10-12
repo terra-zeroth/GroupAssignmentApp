@@ -14,6 +14,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
+/**
+ * VIEWMODEL (MVVM):
+ * holds the add/edit form's state and does the form's
+ * logic: validation, loading an entry to edit, and saving (R2).
+ *
+ * MainActivity owns this ViewModel, so it outlives the form screen.
+ * That's why the form is reset after saving and on Back; otherwise the
+ * next time the form opens it would still show the old values.
+ */
+
 class AddDocumentationViewModel(
     private val documentationRepository: DocumentationRepository,
     taskRepository: TaskRepository
@@ -22,7 +32,7 @@ class AddDocumentationViewModel(
     private val _uiState = MutableStateFlow(AddDocumentationUiState())
     val uiState: StateFlow<AddDocumentationUiState> = _uiState.asStateFlow()
 
-    // Expose available tasks for the picker dropdown/list
+    // The task picker's choices; updates by itself if tasks change
     val taskOptions: StateFlow<List<TaskOption>> = taskRepository.allTasks
         .map { tasks ->
             tasks.map { TaskOption(id = it.task.id, title = it.task.title) }
@@ -60,7 +70,10 @@ class AddDocumentationViewModel(
         _uiState.update { it.copy(imageUri = null) }
     }
 
-    // ONE saveEntry that handles both add and edit
+    // One save for both modes. Validates first, then adds a new entry (author =
+    // whoever is logged in now) or updates the edited one (original author kept).
+    // The username is passed in at save time, not in the constructor, so it's
+    // never a stale name from an earlier login.
     fun saveEntry(currentUserName: String, onSaved: () -> Unit) {
         val state = _uiState.value
         val taskId = state.selectedTaskId
@@ -72,7 +85,6 @@ class AddDocumentationViewModel(
             _uiState.update { it.copy(taskError = taskErr, noteError = noteErr) }
             return
         }
-        // taskId is now smart-cast to Long
 
         viewModelScope.launch {
             val entryId = state.editingEntryId
@@ -101,10 +113,13 @@ class AddDocumentationViewModel(
         }
     }
 
+    // Back to an empty form (also clears editingEntryId and authorName)
     fun resetForm() {
         _uiState.value = AddDocumentationUiState()
     }
 
+    // Fills the form with a saved entry for editing. Skips if that entry is
+    // already loaded, so rotating mid-edit doesn't overwrite the user's changes.
     fun loadEntry(entryId: Long) {
         // if already editing this entry, don't reload (protects against rotation)
         if (_uiState.value.editingEntryId == entryId) return

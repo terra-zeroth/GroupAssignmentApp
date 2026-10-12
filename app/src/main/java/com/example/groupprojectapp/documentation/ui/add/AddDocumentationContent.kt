@@ -21,6 +21,24 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+/**
+ * VIEW (MVVM):
+ * the add/edit documentation form (A3, A4).
+ *
+ * Shows:
+ * a task picker, the date (tap to open a date picker), the note,
+ * an attach/remove screenshot section, and Save. The title and Save button
+ * say "Edit"/"Save Changes" when editingEntryId is set.
+ *
+ * Does NOT:
+ * validate, save or load anything. It draws[AddDocumentationUiState]
+ * and reports every change and click upward,
+ * so the previews below can supply fake state.
+ *
+ * The form scrolls (verticalScroll) so Save stays reachable in landscape
+ * and at large font sizes (R5).
+ */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddDocumentationContent(
@@ -35,6 +53,8 @@ fun AddDocumentationContent(
     onRemoveImageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Local UI-only state: whether the dialog is open isn't app data,
+    // so it stays here instead of in the ViewModel
     var showDatePicker by remember { mutableStateOf(false) }
 
     val isEditing = uiState.editingEntryId != null
@@ -177,6 +197,9 @@ fun AddDocumentationContent(
 
     // Date Picker Dialog Overlay
     if (showDatePicker) {
+
+        // The Material DatePicker works in UTC milliseconds, so convert
+        // LocalDate -> UTC millis here, and back again when OK is pressed
         val initialMillis = uiState.date
             .atStartOfDay(ZoneOffset.UTC)
             .toInstant()

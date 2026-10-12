@@ -3,6 +3,15 @@ package com.example.groupprojectapp.documentation.data
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
 
+/**
+ * MODEL (data layer):
+ * the only way the ViewModels reach documentation data,
+ * so they never call the DAO directly.
+ *
+ * It also owns the storage format: ViewModels work with LocalDate and this
+ * class converts it to the epoch day (a Long) that Room stores.
+ */
+
 class DocumentationRepository(private val documentationDao: DocumentationDao) {
 
     val allEntriesWithTask: Flow<List<DocumentationEntryWithTask>> =
@@ -18,6 +27,7 @@ class DocumentationRepository(private val documentationDao: DocumentationDao) {
         imageUri: String? = null,
         authorName: String
     ) {
+        // id is left out (defaults to 0) so Room generates a new one
         val entry = DocumentationEntry(
             taskId = taskId,
             dateEpochDay = date.toEpochDay(),
@@ -40,6 +50,7 @@ class DocumentationRepository(private val documentationDao: DocumentationDao) {
         imageUri: String?,
         authorName: String
     ) {
+        // Keeps the existing id, which is how Room knows which row to replace
         val entry = DocumentationEntry(
             id = id,
             taskId = taskId,

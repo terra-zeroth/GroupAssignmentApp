@@ -47,7 +47,14 @@ class MainActivity : ComponentActivity() {
                 "home" -> HomeScreen(
                     groupName = sessionState.groupName,
                     userName = sessionState.userName,
-                    onNavigate = { screen -> sessionViewModel.navigateTo(screen) },
+                    onNavigate = { screen ->
+                        if (screen == "Documentation"){
+                            // clear filter, back to home
+                            sessionViewModel.openAllDocumentation()
+                        } else {
+                            sessionViewModel.navigateTo(screen)
+                        }
+                    },
                     onLogout = { sessionViewModel.logout() }
                 )
 
@@ -57,11 +64,15 @@ class MainActivity : ComponentActivity() {
                 )
 
                 "Timeline" -> TimelineScreen(
-                    onBackClick = { sessionViewModel.navigateTo("home")}
+                    onBackClick = { sessionViewModel.navigateTo("home")},
+                    onOpenDocs = { taskId ->
+                        sessionViewModel.openDocumentationForTask(taskId)
+                    }
                 )
 
                 "Documentation" -> DocumentationScreen(
-                    onBackClick = { sessionViewModel.navigateTo("home") },
+                    taskId = sessionState.selectedTaskId,
+                    onBackClick = { sessionViewModel.navigateTo(sessionState.docsBackTarget) },
                     onAddClick = {
                         // sessionViewModel.navigateTo("DocumentationAdd")
 
