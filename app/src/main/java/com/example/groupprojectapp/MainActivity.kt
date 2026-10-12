@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.groupprojectapp.documentation.ui.add.AddDocumentationScreen
 import com.example.groupprojectapp.login.ui.LoginScreen
 import com.example.groupprojectapp.session.SessionViewModel
 
@@ -46,7 +47,14 @@ class MainActivity : ComponentActivity() {
                 "home" -> HomeScreen(
                     groupName = sessionState.groupName,
                     userName = sessionState.userName,
-                    onNavigate = { screen -> sessionViewModel.navigateTo(screen) },
+                    onNavigate = { screen ->
+                        if (screen == "Documentation"){
+                            // clear filter, back to home
+                            sessionViewModel.openAllDocumentation()
+                        } else {
+                            sessionViewModel.navigateTo(screen)
+                        }
+                    },
                     onLogout = { sessionViewModel.logout() }
                 )
 
@@ -56,9 +64,37 @@ class MainActivity : ComponentActivity() {
                 )
 
                 "Timeline" -> TimelineScreen(
-                    onBackClick = { sessionViewModel.navigateTo("home")}
+                    onBackClick = { sessionViewModel.navigateTo("home")},
+                    onOpenDocs = { taskId ->
+                        sessionViewModel.openDocumentationForTask(taskId)
+                    }
                 )
-                "Documentation" -> DocumentationScreen()
+
+                "Documentation" -> DocumentationScreen(
+                    taskId = sessionState.selectedTaskId,
+                    onBackClick = { sessionViewModel.navigateTo(sessionState.docsBackTarget) },
+                    onAddClick = {
+                        // sessionViewModel.navigateTo("DocumentationAdd")
+
+                        // clear any old ID and open empty form for a new entry
+                        sessionViewModel.openDocumentationEditor(null)
+                    },
+                    onEntryClick = { entryId ->
+                        // Pass the tapped entry's ID to load it into the editor
+                        sessionViewModel.openDocumentationEditor(entryId)
+                    }
+                )
+
+                // new screen for adding new documentation details
+                "DocumentationAdd" ->
+                    AddDocumentationScreen(
+                        entryId = sessionState.selectedEntryId,
+                        onBackClick = { sessionViewModel.navigateTo("Documentation") },
+                        onSaved = { sessionViewModel.navigateTo("Documentation") },
+                        currentUsername = sessionState.userName,
+                    )
+
+
                 "Github" -> GithubScreen()
                 "Settings" -> SettingsScreen()
             }

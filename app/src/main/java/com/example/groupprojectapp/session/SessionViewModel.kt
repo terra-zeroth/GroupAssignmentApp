@@ -1,6 +1,7 @@
 package com.example.groupprojectapp.session
 
 import androidx.lifecycle.ViewModel
+import com.example.groupprojectapp.documentation.ui.add.AddDocumentationScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,8 +45,45 @@ class SessionViewModel : ViewModel() {
             it.copy(
                 groupName = "",
                 userName = "",
-                currentScreen = "Login"
+                currentScreen = "Login",
+                selectedTaskId = null, // don't start the next login filtered
+                selectedEntryId = null, // no leftover entry either
+                docsBackTarget = "home"
             )
         }
     }
+
+    // Open the add/edit form (null = new entry).
+    // Only sets the entry ID, so the list's filter and Back target stay the same.
+    fun openDocumentationEditor(entryId: Long?) {
+        _uiState.update { state ->
+            state.copy(
+                selectedEntryId = entryId,
+                currentScreen = "DocumentationAdd"
+            )
+        }
+    }
+
+    // Open Documentation filtered to one task (called from the Timeline in step 3)
+    fun openDocumentationForTask(taskId: Long) {
+        _uiState.update { state ->
+            state.copy(
+                selectedTaskId = taskId,
+                docsBackTarget = "Timeline",
+                currentScreen = "Documentation"
+            )
+        }
+    }
+
+    // Open Documentation showing all entries (called from Home)
+    fun openAllDocumentation() {
+        _uiState.update { state ->
+            state.copy(
+                selectedTaskId = null,
+                docsBackTarget = "home",
+                currentScreen = "Documentation"
+            )
+        }
+    }
+
 }

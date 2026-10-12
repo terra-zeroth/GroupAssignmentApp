@@ -3,6 +3,7 @@ package com.example.groupprojectapp.timeline.ui.components
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ fun TimelineRightPane(
     dayWidth: Dp,
     todayOffset: Int, // days from firstDate to today; outside 0 until totalNumDays = line hidden
     horizontalScrollState: ScrollState,
+    onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val outlineColor = MaterialTheme.colorScheme.outlineVariant
@@ -133,6 +135,9 @@ fun TimelineRightPane(
                             .width(dayWidth * item.lengthDays)
                             .height(rowHeight / 2) // half the height of the row
                             .clip(RoundedCornerShape(4.dp))
+                            .clickable(onClickLabel = "Show task details") {
+                                onItemClick(item.taskId)
+                            }
                             .background(barColor)
                     )
                 }

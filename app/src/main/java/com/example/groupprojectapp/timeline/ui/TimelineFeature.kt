@@ -31,6 +31,7 @@ import com.example.groupprojectapp.tasks.TaskContainer
 @Composable
 fun TimelineFeature(
     onBackClick: () -> Unit,
+    onOpenDocs: (Long) -> Unit,
     modifier: Modifier = Modifier
 ){
     BackHandler(onBack = onBackClick)
@@ -55,6 +56,7 @@ fun TimelineFeature(
     TimelineContent(
         uiState = uiState,
         onBackClick = onBackClick,
+        onOpenDocs = onOpenDocs,
         modifier = modifier
     )
 }
