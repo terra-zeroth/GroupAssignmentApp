@@ -1,6 +1,7 @@
 package com.example.groupprojectapp.session
 
 import androidx.lifecycle.ViewModel
+import com.example.groupprojectapp.documentation.ui.add.AddDocumentationScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,6 +46,16 @@ class SessionViewModel : ViewModel() {
                 groupName = "",
                 userName = "",
                 currentScreen = "Login"
+            )
+        }
+    }
+
+    // documentation editor:
+    fun openDocumentationEditor(entryId: Long?) {
+        _uiState.update { state ->
+            state.copy(
+                selectedEntryId = entryId,
+                currentScreen = "DocumentationAdd"
             )
         }
     }

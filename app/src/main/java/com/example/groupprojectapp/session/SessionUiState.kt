@@ -5,4 +5,5 @@ data class SessionUiState(
     val currentScreen: String = "Login",
     val groupName: String = "",
     val userName: String = "",
+    val selectedEntryId: Long? = null // for editing documentations
 )
