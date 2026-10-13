@@ -1,5 +1,7 @@
 package com.example.groupprojectapp.documentation.ui.list
 
+import com.example.groupprojectapp.documentation.ui.add.TaskOption
+
 /**
  * UI STATE (MVVM):
  * the complete state of the Documentation list screen,
@@ -14,5 +16,8 @@ package com.example.groupprojectapp.documentation.ui.list
 data class DocumentationUiState(
     val isLoading: Boolean = true,
     val entries: List<DocumentationEntryItem> = emptyList(),
-    val filterTaskTitle: String? = null
+    val filterTaskTitle: String? = null,
+    val filters: DocumentationFilters = DocumentationFilters(), // current filter choices
+    val authorOptions: List<String> = emptyList(), // names for the Person filter
+
 )
