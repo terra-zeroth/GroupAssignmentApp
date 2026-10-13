@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,6 +41,7 @@ import com.example.groupprojectapp.timeline.ui.components.EmptyTimelineState
 import com.example.groupprojectapp.timeline.ui.components.TimelineLeftPane
 import com.example.groupprojectapp.timeline.ui.components.TimelineLegend
 import com.example.groupprojectapp.timeline.ui.components.TimelineRightPane
+import com.example.groupprojectapp.timeline.ui.components.TimelineStatusCategory
 import com.example.groupprojectapp.timeline.ui.components.TimelineTaskSheet
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import java.time.LocalDate
@@ -49,13 +51,18 @@ import java.time.LocalDate
  * the Timeline (Gantt chart) screen.
  *
  * What it shows: a top bar with Back (and a "Today" button when the chart is
- * visible), then one of three states: loading spinner, empty message, or the
- * chart (legend, a left pane of task labels, and a right pane with the date
- * header, bars and today line that scrolls sideways).
+ * visible), then one of four states: loading spinner, empty message (no tasks
+ * at all), "no tasks match this filter", or the chart (legend/filter chips,
+ * a left pane of task labels, and a right pane with the date header, bars
+ * and today line that scrolls sideways).
+ *
+ * The legend doubles as the status filter. It stays visible when the filter
+ * hides everything, so the user can always tick a status again.
  *
  * What it does NOT do: no date maths, filtering or database work. It draws
- * [TimelineUiState] and passes the Back click up through onBackClick.
- * Because it only receives state, the previews below can supply fake data.
+ * [TimelineUiState] and passes clicks up (onBackClick, onOpenDocs,
+ * onFilterToggle). Because it only receives state, the previews below can
+ * supply fake data.
  *
  * Sizing: left pane width and day width come from the screen size
  * (BoxWithConstraints). Portrait shows about 4 days; landscape tries to fit
@@ -67,11 +74,13 @@ import java.time.LocalDate
  *
  * Local UI-only state: the scroll positions, the open sheet and the
  * re-centre counter stay here because they are not app data and nothing
- * outside this screen needs them.
+ * outside this screen needs them. The filter is app state, so it lives in
+ * the ViewModel.
  *
  * Accessibility (R5): row height, header height and minimum day width are
  * sp-based so the chart grows with the user's text size; status is shown as
- * text as well as colour; the Back icon has a content description.
+ * text as well as colour; filter chips use a filled/hollow swatch as well as
+ * colour; the Back icon has a content description.
  */
 
 /*
@@ -90,6 +99,7 @@ import java.time.LocalDate
     [x] horizontal scrolling
     [x] sizes from the screen (BoxWithConstraints)
     [x] auto-scroll to today + Today button
+    [x] status filter (legend as filter chips)
  */
 
 /*
@@ -104,6 +114,7 @@ fun TimelineContent(
     uiState: TimelineUiState,
     onBackClick: () -> Unit,
     onOpenDocs: (Long) -> Unit,
+    onFilterToggle: (TimelineStatusCategory) -> Unit,
     modifier: Modifier = Modifier
 ){
     // UI-only state: which task's details sheet is open (null = closed).
@@ -173,87 +184,116 @@ fun TimelineContent(
                     }
                 }
 
-                uiState.items.isEmpty() -> {
+                // No tasks at all (before filtering)
+                uiState.totalTaskCount == 0 -> {
                     EmptyTimelineState()
                 }
 
+                // Tasks exist: always show the legend/filter so the user can change it
                 else -> {
-                    // Legend placed inside the chart branch above the scroll container
-                    TimelineLegend()
-
-                    // Hint so users know the bars and labels are tappable
-                    Text(
-                        text = "Tap a task or its bar to see details and open its documentation.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                    TimelineLegend(
+                        selectedCategories = uiState.selectedCategories,
+                        onToggle = onFilterToggle
                     )
 
-                    // SCREEN-BASED SIZES
-                    // BoxWithConstraints tells us how much space the chart has (maxWidth/maxHeight, already Dp)
-                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                        val isLandscape = maxWidth > maxHeight
+                    // Hint line 1: how to use the legend
+                    Text(
+                        text = "Tap a status above to show or hide it.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp)
+                    )
 
-                        // Left pane: a share of the width, kept within sensible bounds
-                        val leftPaneWidthDp = (maxWidth * if (isLandscape) 0.25f else 0.35f)
-                            .coerceIn(110.dp, 220.dp)
-
-                        // Right pane gets whatever is left
-                        val rightPaneWidthDp = maxWidth - leftPaneWidthDp
-
-                        // Portrait: ~4 days visible. Landscape: try to fit the whole project.
-                        // coerceAtLeast(1) guards against dividing by 0 days.
-                        val dayWidthDp = (
-                                if (isLandscape) rightPaneWidthDp / uiState.totalNumDays.coerceAtLeast(1)
-                                else rightPaneWidthDp / 4
-                                ).coerceAtLeast(minDayWidthDp)
-
-                        // AUTO-SCROLL TO TODAY
-                        // Today's centre, then shift left by half the visible width so today sits in the middle
-                        val todayCentreDp = dayWidthDp * uiState.todayOffset + dayWidthDp / 2
-                        val targetDp = todayCentreDp - rightPaneWidthDp / 2
-
-                        // Scroll state works in whole pixels.
-                        // Negative / too-large values are fine: scrollTo stops at the edges.
-                        val targetPx = with(density) { targetDp.toPx() }.toInt()
-
-                        // Keys:
-                        // - targetPx: changes with day width, todayOffset or pane width (e.g. rotation)
-                        // - recentreRequests: changes on each "Today" tap
-                        // NOT keyed on items: the list re-emits whenever any task changes, which
-                        // would yank the chart back to today while the user is looking elsewhere.
-                        LaunchedEffect(targetPx, recentreRequests) {
-                            horizontalScrollState.scrollTo(targetPx)
-                        }
-
-                        // VERTICAL SCROLL CONTAINER (Links left and right panes together)
-                        Row(
+                    if (uiState.items.isEmpty()) {
+                        // Tasks exist, but the filter hides all of them
+                        Box(
                             modifier = Modifier
                                 .fillMaxSize()
-                                .verticalScroll(verticalScrollState)
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            // LEFT PANE (Fixed sideways, scrolls vertically)
-                            TimelineLeftPane(
-                                items = uiState.items,
-                                headerHeight = headerHeightDp,
-                                rowHeight = rowHeightDp,
-                                width = leftPaneWidthDp,
-                                onItemClick = { taskId -> sheetTaskId = taskId }
+                            Text(
+                                text = "No tasks match this filter.",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center
                             )
+                        }
+                    } else {
+                        // Hint line 2: only shown when there's something to tap
+                        Text(
+                            text = "Tap a task or its bar for details and documentation.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp)
+                        )
 
-                            // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
-                            TimelineRightPane(
-                                items = uiState.items,
-                                firstDate = uiState.firstDate,
-                                totalNumDays = uiState.totalNumDays,
-                                headerHeight = headerHeightDp,
-                                rowHeight = rowHeightDp,
-                                dayWidth = dayWidthDp,
-                                todayOffset = uiState.todayOffset,
-                                horizontalScrollState = horizontalScrollState,
-                                onItemClick = { taskId -> sheetTaskId = taskId },
-                                modifier = Modifier.weight(1f)
-                            )
+                        // SCREEN-BASED SIZES
+                        // BoxWithConstraints tells us how much space the chart has (maxWidth/maxHeight, already Dp)
+                        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                            val isLandscape = maxWidth > maxHeight
+
+                            // Left pane: a share of the width, kept within sensible bounds
+                            val leftPaneWidthDp = (maxWidth * if (isLandscape) 0.25f else 0.35f)
+                                .coerceIn(110.dp, 220.dp)
+
+                            // Right pane gets whatever is left
+                            val rightPaneWidthDp = maxWidth - leftPaneWidthDp
+
+                            // Portrait: ~4 days visible. Landscape: try to fit the whole project.
+                            // coerceAtLeast(1) guards against dividing by 0 days.
+                            val dayWidthDp = (
+                                    if (isLandscape) rightPaneWidthDp / uiState.totalNumDays.coerceAtLeast(1)
+                                    else rightPaneWidthDp / 4
+                                    ).coerceAtLeast(minDayWidthDp)
+
+                            // AUTO-SCROLL TO TODAY
+                            // Today's centre, then shift left by half the visible width so today sits in the middle
+                            val todayCentreDp = dayWidthDp * uiState.todayOffset + dayWidthDp / 2
+                            val targetDp = todayCentreDp - rightPaneWidthDp / 2
+
+                            // Scroll state works in whole pixels.
+                            // Negative / too-large values are fine: scrollTo stops at the edges.
+                            val targetPx = with(density) { targetDp.toPx() }.toInt()
+
+                            // Keys:
+                            // - targetPx: changes with day width, todayOffset or pane width (e.g. rotation)
+                            // - recentreRequests: changes on each "Today" tap
+                            // NOT keyed on items: the list re-emits whenever any task (or the filter) changes,
+                            // which would yank the chart back to today while the user is looking elsewhere.
+                            LaunchedEffect(targetPx, recentreRequests) {
+                                horizontalScrollState.scrollTo(targetPx)
+                            }
+
+                            // VERTICAL SCROLL CONTAINER (Links left and right panes together)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .verticalScroll(verticalScrollState)
+                            ) {
+                                // LEFT PANE (Fixed sideways, scrolls vertically)
+                                TimelineLeftPane(
+                                    items = uiState.items,
+                                    headerHeight = headerHeightDp,
+                                    rowHeight = rowHeightDp,
+                                    width = leftPaneWidthDp,
+                                    onItemClick = { taskId -> sheetTaskId = taskId }
+                                )
+
+                                // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
+                                TimelineRightPane(
+                                    items = uiState.items,
+                                    firstDate = uiState.firstDate,
+                                    totalNumDays = uiState.totalNumDays,
+                                    headerHeight = headerHeightDp,
+                                    rowHeight = rowHeightDp,
+                                    dayWidth = dayWidthDp,
+                                    todayOffset = uiState.todayOffset,
+                                    horizontalScrollState = horizontalScrollState,
+                                    onItemClick = { taskId -> sheetTaskId = taskId },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
                         }
                     }
                 }
@@ -261,7 +301,7 @@ fun TimelineContent(
         }
 
         // TASK DETAILS SHEET
-        // Find the tapped task. If it was deleted while open, nothing is found
+        // Find the tapped task. If it was deleted (or filtered out) while open, nothing is found
         // and the sheet simply disappears, with no crash.
         val sheetItem = uiState.items.find { it.taskId == sheetTaskId }
 
@@ -283,11 +323,13 @@ fun TimelineContent(
 
 // SHARED SAMPLE DATA FOR PREVIEWS
 // Dates match each item's offset from firstDate (1 Oct): offset 0 = 1 Oct
+// totalTaskCount must match items.size, or the screen shows the "no tasks" state
 private val sampleTimelineUiState = TimelineUiState(
     isLoading = false,
     todayOffset = 3,
     firstDate = LocalDate.of(2026, 10, 1),
     totalNumDays = 14,
+    totalTaskCount = 4,
     items = listOf(
         TimelineItem(
             taskId = 1L,
@@ -338,6 +380,7 @@ private val sampleTimelineUiState = TimelineUiState(
 
 // PREVIEWS ---------------
 // Note: Previews don't run LaunchedEffect scrolling reliably — check auto-scroll on the emulator.
+// Filter chips don't do anything in Previews (onFilterToggle = {}); test filtering on the emulator.
 
 
 // simultaneously shows both dark and light theme
@@ -354,7 +397,8 @@ private fun TimelineContentThemePreview() {
         TimelineContent(
             uiState = sampleTimelineUiState,
             onBackClick = {},
-            onOpenDocs = {}
+            onOpenDocs = {},
+            onFilterToggle = {}
         )
     }
 }
@@ -370,7 +414,42 @@ private fun TimelineContentLandscapePreview() {
         TimelineContent(
             uiState = sampleTimelineUiState,
             onBackClick = {},
-            onOpenDocs = {}
+            onOpenDocs = {},
+            onFilterToggle = {}
+        )
+    }
+}
+
+// Filter: Done unticked (hollow swatch), so Task 3 is hidden but the dates stay the same
+@Preview(showBackground = true, name = "Filter: Done hidden")
+@Composable
+private fun TimelineContentFilteredPreview() {
+    GroupProjectAppTheme {
+        TimelineContent(
+            uiState = sampleTimelineUiState.copy(
+                items = sampleTimelineUiState.items.filter { it.status != TaskStatus.DONE },
+                selectedCategories = TimelineStatusCategory.entries.toSet() - TimelineStatusCategory.DONE
+            ),
+            onBackClick = {},
+            onOpenDocs = {},
+            onFilterToggle = {}
+        )
+    }
+}
+
+// Filter: everything unticked → "No tasks match this filter", chips still visible
+@Preview(showBackground = true, name = "Filter: no matches")
+@Composable
+private fun TimelineContentNoMatchesPreview() {
+    GroupProjectAppTheme {
+        TimelineContent(
+            uiState = sampleTimelineUiState.copy(
+                items = emptyList(),
+                selectedCategories = emptySet()
+            ),
+            onBackClick = {},
+            onOpenDocs = {},
+            onFilterToggle = {}
         )
     }
 }
@@ -381,12 +460,14 @@ private fun TimelineContentEmptyPreview(){
     GroupProjectAppTheme{
         TimelineContent(
             uiState = TimelineUiState(
-                // test the empty list state, not loading state
+                // test the empty list state (no tasks at all), not loading state
                 isLoading = false,
-                items = emptyList()
+                items = emptyList(),
+                totalTaskCount = 0
             ),
             onBackClick = {},
-            onOpenDocs = {}
+            onOpenDocs = {},
+            onFilterToggle = {}
         )
     }
 }
@@ -402,12 +483,14 @@ private fun TimelineContentLoadingPreview(){
                 items = emptyList()
             ),
             onBackClick = {},
-            onOpenDocs = {}
+            onOpenDocs = {},
+            onFilterToggle = {}
         )
     }
 }
 
-// 2x font: minimum day width (56.sp) doubles, so columns don't squash and the chart scrolls instead
+// 2x font: minimum day width (56.sp) doubles, so columns don't squash and the chart scrolls instead.
+// Legend chips should wrap onto a second line rather than squash.
 @Preview(showBackground = true, name = "Normal Font")
 @Preview(showBackground = true, fontScale = 2f, name = "2x Font Scale")
 @Composable
@@ -416,7 +499,8 @@ private fun TimelineContentSkeletonPreview() {
         TimelineContent(
             uiState = sampleTimelineUiState,
             onBackClick = {},
-            onOpenDocs = {}
+            onOpenDocs = {},
+            onFilterToggle = {}
         )
     }
 }
