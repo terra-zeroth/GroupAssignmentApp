@@ -10,6 +10,7 @@ import com.example.groupprojectapp.documentation.data.DocumentationEntry
 /**
  * MODEL (data layer): the Room database for the Tasks feature. It holds the
  * `tasks` and `members` tables and hands out their DAOs.
+ * As well as store documentation tables for each tasks.
  *
  * [getInstance] is a singleton: one shared database for the whole app, so
  * every caller reads and writes the same data. `@Volatile` and `synchronized`
@@ -42,3 +43,8 @@ abstract class TasksDatabase : RoomDatabase() {
             }
     }
 }
+
+// TODO (future): replace with real migrations before real users rely on the app.
+//  This wipes all tables on every version change. Fine for development.
+//  Fix: set exportSchema = true, add AutoMigration / Migration objects for each
+//  version step, register them with .addMigrations(...), then remove this fallback.
