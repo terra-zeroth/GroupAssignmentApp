@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,7 +61,12 @@ fun TimelineLegend(
                         color = timelineCategoryColor(category),
                         filled = isSelected
                     )
-                }
+                },
+                // White text on ticked (periwinkle) chips; unticked chips keep the
+                // default navy text so it stays visible on the off-white background
+                colors = FilterChipDefaults.filterChipColors(
+                    selectedLabelColor = Color.White
+                )
             )
         }
     }

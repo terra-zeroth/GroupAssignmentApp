@@ -9,10 +9,16 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -24,9 +30,13 @@ import com.example.groupprojectapp.timeline.ui.TimelineItem
  * the fixed left-hand column of task labels (it scrolls up and down with the
  * chart but never sideways).
  *
- * Each row shows the title on line 1 and "assignee status" on line 2.
+ * Each row shows the title on line 1 and "assignee · status" on line 2.
  * Status is written out (including "Overdue", checked first) so colour isn't
  * the only signal (R5).
+ *
+ * Lines: dashed navy dividers under the header space and under every row,
+ * plus a solid navy line on the right edge where the pane meets the grid.
+ * They use the same thickness as the grid in [TimelineRightPane].
  *
  * Alignment: the top spacer matches the date header height, and every row
  * uses the same rowHeight as [TimelineRightPane], so each label sits level
@@ -42,43 +52,86 @@ fun TimelineLeftPane(
     onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.width(width)) {
-        // Blank Spacer to align with Date Header in right pane
-        Spacer(modifier = Modifier.height(headerHeight))
+    // Navy in light mode, periwinkle in dark mode
+    val gridColor = MaterialTheme.colorScheme.outline
 
-        // Task Labels (2 lines: Title on line 1, Assignee · Status on line 2)
-        items.forEach { item ->
-            Box(
+    // Surface gives the pane its background and sets the text colour to match
+    // (onSecondaryContainer), so labels stay readable in light and dark mode
+    Surface(
+        color = MaterialTheme.colorScheme.secondaryContainer,
+        modifier = modifier.width(width)
+    ) {
+        Column(
+            // Solid line on the right edge, drawn on top so rows can't cover it
+            modifier = Modifier.drawWithContent {
+                drawContent()
+                val stroke = TimelineGridLineWidth.toPx()
+                drawLine(
+                    color = gridColor,
+                    start = Offset(size.width - stroke / 2, 0f),
+                    end = Offset(size.width - stroke / 2, size.height),
+                    strokeWidth = stroke
+                )
+            }
+        ) {
+            // Blank Spacer to align with Date Header in right pane
+            Spacer(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(rowHeight)
-                    .clickable(onClickLabel = "Show task details") {
-                        onItemClick(item.taskId)
-                    }
-                    .padding(horizontal = 8.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Column {
-                    Text(
-                        text = item.title,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
+                    .height(headerHeight)
+                    .dashedBottomLine(gridColor)
+            )
 
-                    // Uses the shared helper function instead of duplicated logic
-                    Text(
-                        text = "${item.assigneeName} · ${timelineStatusText(item)}",
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+            // Task Labels (2 lines: Title on line 1, Assignee · Status on line 2)
+            items.forEach { item ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(rowHeight)
+                        .dashedBottomLine(gridColor) // before padding so the line spans the full width
+                        .clickable(onClickLabel = "Show task details") {
+                            onItemClick(item.taskId)
+                        }
+                        .padding(horizontal = 8.dp),
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    Column {
+                        Text(
+                            text = item.title,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        // Uses the shared helper function instead of duplicated logic
+                        Text(
+                            text = "${item.assigneeName} · ${timelineStatusText(item)}",
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                        )
+                    }
                 }
             }
         }
     }
+}
+
+/**
+ * Dashed line along the bottom edge, at the same height as the grid's row
+ * lines in [TimelineRightPane], so the two panes line up.
+ */
+private fun Modifier.dashedBottomLine(color: Color): Modifier = this.drawBehind {
+    val stroke = TimelineGridLineWidth.toPx()
+    drawLine(
+        color = color,
+        start = Offset(0f, size.height - stroke / 2),
+        end = Offset(size.width, size.height - stroke / 2),
+        strokeWidth = stroke,
+        pathEffect = PathEffect.dashPathEffect(floatArrayOf(4.dp.toPx(), 3.dp.toPx()))
+    )
 }
 
 /**

@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.groupprojectapp.documentation.ui.add.AddDocumentationScreen
 import com.example.groupprojectapp.login.ui.LoginScreen
@@ -30,73 +31,83 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            // 1. Get the shared SessionViewModel and collect its state ABOVE the when block
-            val sessionViewModel: SessionViewModel = viewModel()
-            val sessionState by sessionViewModel.uiState.collectAsState()
+            // App-wide theme: every screen gets the app palette (colours from ui/theme)
+            GroupProjectAppTheme {
+                // Surface paints the theme background behind every screen and sets the default
+                // text colour, so screens without a Scaffold (e.g. HomeScreen) match too
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    // 1. Get the shared SessionViewModel and collect its state ABOVE the when block
+                    val sessionViewModel: SessionViewModel = viewModel()
+                    val sessionState by sessionViewModel.uiState.collectAsState()
 
-            // 2. Switch screens based on currentScreen from SessionViewModel
-            when (sessionState.currentScreen) {
-                "Login" -> {
-                    LoginScreen(
-                        onSuccess = { group, user ->
-                            sessionViewModel.onLoginSuccess(group, user)
+                    // 2. Switch screens based on currentScreen from SessionViewModel
+                    when (sessionState.currentScreen) {
+                        "Login" -> {
+                            LoginScreen(
+                                onSuccess = { group, user ->
+                                    sessionViewModel.onLoginSuccess(group, user)
+                                }
+                            )
                         }
-                    )
+
+                        "home" -> HomeScreen(
+                            groupName = sessionState.groupName,
+                            userName = sessionState.userName,
+                            onNavigate = { screen ->
+                                if (screen == "Documentation"){
+                                    // clear filter, back to home
+                                    sessionViewModel.openAllDocumentation()
+                                } else {
+                                    sessionViewModel.navigateTo(screen)
+                                }
+                            },
+                            onLogout = { sessionViewModel.logout() }
+                        )
+
+                        "Tasks" -> TasksScreen(
+                            userName = sessionState.userName,
+                            onBackClick = { sessionViewModel.navigateTo("home") }
+                        )
+
+                        "Timeline" -> TimelineScreen(
+                            onBackClick = { sessionViewModel.navigateTo("home")},
+                            onOpenDocs = { taskId ->
+                                sessionViewModel.openDocumentationForTask(taskId)
+                            }
+                        )
+
+                        "Documentation" -> DocumentationScreen(
+                            taskId = sessionState.selectedTaskId,
+                            onBackClick = { sessionViewModel.navigateTo(sessionState.docsBackTarget) },
+                            onAddClick = {
+                                // sessionViewModel.navigateTo("DocumentationAdd")
+
+                                // clear any old ID and open empty form for a new entry
+                                sessionViewModel.openDocumentationEditor(null)
+                            },
+                            onEntryClick = { entryId ->
+                                // Pass the tapped entry's ID to load it into the editor
+                                sessionViewModel.openDocumentationEditor(entryId)
+                            }
+                        )
+
+                        // new screen for adding new documentation details
+                        "DocumentationAdd" ->
+                            AddDocumentationScreen(
+                                entryId = sessionState.selectedEntryId,
+                                onBackClick = { sessionViewModel.navigateTo("Documentation") },
+                                onSaved = { sessionViewModel.navigateTo("Documentation") },
+                                currentUsername = sessionState.userName,
+                            )
+
+
+                        "Github" -> GithubScreen()
+                        "Settings" -> SettingsScreen()
+                    }
                 }
-
-                "home" -> HomeScreen(
-                    groupName = sessionState.groupName,
-                    userName = sessionState.userName,
-                    onNavigate = { screen ->
-                        if (screen == "Documentation"){
-                            // clear filter, back to home
-                            sessionViewModel.openAllDocumentation()
-                        } else {
-                            sessionViewModel.navigateTo(screen)
-                        }
-                    },
-                    onLogout = { sessionViewModel.logout() }
-                )
-
-                "Tasks" -> TasksScreen(
-                    userName = sessionState.userName,
-                    onBackClick = { sessionViewModel.navigateTo("home") }
-                )
-
-                "Timeline" -> TimelineScreen(
-                    onBackClick = { sessionViewModel.navigateTo("home")},
-                    onOpenDocs = { taskId ->
-                        sessionViewModel.openDocumentationForTask(taskId)
-                    }
-                )
-
-                "Documentation" -> DocumentationScreen(
-                    taskId = sessionState.selectedTaskId,
-                    onBackClick = { sessionViewModel.navigateTo(sessionState.docsBackTarget) },
-                    onAddClick = {
-                        // sessionViewModel.navigateTo("DocumentationAdd")
-
-                        // clear any old ID and open empty form for a new entry
-                        sessionViewModel.openDocumentationEditor(null)
-                    },
-                    onEntryClick = { entryId ->
-                        // Pass the tapped entry's ID to load it into the editor
-                        sessionViewModel.openDocumentationEditor(entryId)
-                    }
-                )
-
-                // new screen for adding new documentation details
-                "DocumentationAdd" ->
-                    AddDocumentationScreen(
-                        entryId = sessionState.selectedEntryId,
-                        onBackClick = { sessionViewModel.navigateTo("Documentation") },
-                        onSaved = { sessionViewModel.navigateTo("Documentation") },
-                        currentUsername = sessionState.userName,
-                    )
-
-
-                "Github" -> GithubScreen()
-                "Settings" -> SettingsScreen()
             }
         }
     }

@@ -1,16 +1,20 @@
 package com.example.groupprojectapp.timeline.ui
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -21,6 +25,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -63,6 +70,11 @@ import java.time.LocalDate
  * [TimelineUiState] and passes clicks up (onBackClick, onOpenDocs,
  * onFilterToggle). Because it only receives state, the previews below can
  * supply fake data.
+ *
+ * Colours: the top bar uses the theme's tertiaryContainer (periwinkle / dark
+ * blue) with a navy line underneath, and onTertiaryContainer for its title,
+ * icon and Today button, so everything on it stays readable in light and
+ * dark mode.
  *
  * Sizing: left pane width and day width come from the screen size
  * (BoxWithConstraints). Portrait shows about 4 days; landscape tries to fit
@@ -131,25 +143,50 @@ fun TimelineContent(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Timeline") },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Dashboard"
-                        )
-                    }
-                },
-                actions = {
-                    if (showChart) {
-                        // Text button: clearer than an icon and needs no contentDescription
-                        TextButton(onClick = { recentreRequests++ }) {
-                            Text("Today")
+            // Top bar with a navy line underneath, matching the design
+            Column {
+                TopAppBar(
+                    title = { Text("Timeline") },
+                    // Top bar uses tertiaryContainer from the theme (periwinkle / dark blue)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        actionIconContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Dashboard"
+                            )
+                        }
+                    },
+                    actions = {
+                        if (showChart) {
+                            // Outlined so it clearly reads as a button: periwinkle fill, navy border and text
+                            OutlinedButton(
+                                onClick = { recentreRequests++ },
+                                border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                                ),
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                Text("Today")
+                            }
                         }
                     }
-                }
-            )
+
+                )
+
+                // Navy border line along the bottom of the top bar
+                HorizontalDivider(
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
         },
         modifier = modifier
     ) { innerPadding ->
@@ -225,7 +262,7 @@ fun TimelineContent(
                             text = "Tap a task or its bar for details and documentation.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 4.dp)
+                            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 20.dp)
                         )
 
                         // SCREEN-BASED SIZES

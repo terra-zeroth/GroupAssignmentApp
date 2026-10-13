@@ -60,7 +60,7 @@ fun TimelineFeature(
         uiState = uiState,
         onBackClick = onBackClick,
         onOpenDocs = onOpenDocs,
-        onFilterToggle = viewModel::toggleFilter, // legend chip tap → ViewModel updates the filter
+        onFilterToggle = viewModel::toggleFilter, // legend chip tap, ViewModel updates the filter
         modifier = modifier
     )
 }
