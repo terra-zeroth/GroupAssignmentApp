@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.documentation.ui.list
 
+import com.example.groupprojectapp.tasks.data.TaskStatus
 import java.time.LocalDate
 
 /**
@@ -22,5 +23,7 @@ data class DocumentationEntryItem(
     val date: LocalDate,
     val note: String,
     val imageUri: String? = null,
-    val authorName: String
+    val authorName: String,
+    val status: TaskStatus = TaskStatus.TODO,
+    val isOverdue: Boolean = false,
 )

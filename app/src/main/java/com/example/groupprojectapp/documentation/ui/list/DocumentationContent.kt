@@ -1,6 +1,8 @@
 package com.example.groupprojectapp.documentation.ui.list
 
 import android.content.res.Configuration
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +18,19 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +38,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
+import com.example.groupprojectapp.tasks.data.TaskStatus
+import com.example.groupprojectapp.ui.theme.Navy
+import com.example.groupprojectapp.ui.theme.StatusDone
 import java.time.LocalDate
 
 /**
@@ -53,6 +62,12 @@ import java.time.LocalDate
  * LazyColumn because the number of entries keeps growing;
  * it only composes the cards on screen.
  *
+ * Colours (matching the Timeline): the top bar uses tertiaryContainer
+ * (periwinkle / dark blue) with a navy line underneath; the + button is
+ * periwinkle with a navy border; entry cards use surfaceContainerLow
+ * (off-white / dark blue) with a navy border. All come from the theme, so
+ * they switch correctly in dark mode.
+ *
  * Accessibility (R5):
  * icon-only buttons have content descriptions; text uses Material type styles
  * so it scales with the user's font size.
@@ -69,24 +84,50 @@ fun DocumentationContent(
 ){
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    // Uses the filter title if present, otherwise defaults to "Documentation"
-                    Text(uiState.filterTaskTitle ?: "Documentation")
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back to Dashboard"
-                        )
+            // Top bar with a navy line underneath, matching the Timeline
+            Column {
+                TopAppBar(
+                    title = {
+                        // Uses the filter title if present, otherwise defaults to "Documentation"
+                        Text(uiState.filterTaskTitle ?: "Documentation")
+                    },
+                    // Top bar uses tertiaryContainer from the theme (periwinkle / dark blue)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        actionIconContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back to Dashboard"
+                            )
+                        }
                     }
-                }
-            )
+                )
+
+                // Navy border line along the bottom of the top bar
+                HorizontalDivider(
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.outline
+                )
+            }
         },
 
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddClick){
+            // Periwinkle fill, navy icon and navy border, matching the Timeline's Today button
+            FloatingActionButton(
+                onClick = onAddClick,
+                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                modifier = Modifier.border(
+                    width = 1.5.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = FloatingActionButtonDefaults.shape
+                )
+            ){
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add documentation entry"
@@ -170,11 +211,47 @@ private fun DocumentationEntryCard(
     onEntryClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ){
+    // Card colours by status. Overdue is checked first, like the Timeline.
+    // Overdue = red with white text (navy on red is too low contrast)
+    // Completed = green with navy text
+    // Otherwise = the normal off-white / dark blue card
+    val cardColor = when {
+        item.isOverdue -> MaterialTheme.colorScheme.error
+        item.status == TaskStatus.DONE -> StatusDone
+        else -> MaterialTheme.colorScheme.surfaceContainerLow
+    }
+    val textColor = when {
+        item.isOverdue -> MaterialTheme.colorScheme.onError
+        item.status == TaskStatus.DONE -> Navy
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+
+    // Written status so colour isn't the only signal (R5)
+    val statusLabel = when {
+        item.isOverdue -> "Overdue"
+        item.status == TaskStatus.DONE -> "Completed"
+        else -> null
+    }
+
     Card(
         onClick = { onEntryClick(item.id)},
+        colors = CardDefaults.cardColors(
+            containerColor = cardColor,
+            contentColor = textColor
+        ),
+        border = BorderStroke(1.5.dp, MaterialTheme.colorScheme.outline),
         modifier = modifier.fillMaxWidth()
     ){
         Column(modifier = Modifier.padding(16.dp)){
+
+            // Status label (only for Completed / Overdue)
+            statusLabel?.let { label ->
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+            }
 
             // Task Title
             Text(
@@ -184,18 +261,17 @@ private fun DocumentationEntryCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Extra Submission details (date and author)
+            // Extra Submission details (date and author).
+            // No fixed colour, so they use the card's text colour (white on red, navy on green).
             Text(
                 text = item.date.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall
             )
 
             // Author name near the date
             Text(
                 text = "Added by ${item.authorName}",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.labelSmall
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -223,6 +299,9 @@ private fun DocumentationEntryCard(
 
 // SHARED SAMPLE DATA FOR PREVIEWS
 
+// SHARED SAMPLE DATA FOR PREVIEWS
+// One completed (green), one overdue (red), one to do (normal card)
+
 val sampleDocumentationItems = listOf(
     DocumentationEntryItem(
         id = 1L,
@@ -230,7 +309,9 @@ val sampleDocumentationItems = listOf(
         date = LocalDate.of(2026, 10, 1),
         note = "Finished drafiting the Room entities and intial ER diagram",
         imageUri = null,
-        authorName = "Manasviba"
+        authorName = "Manasviba",
+        status = TaskStatus.DONE,
+        isOverdue = false
     ),
 
     DocumentationEntryItem(
@@ -239,7 +320,9 @@ val sampleDocumentationItems = listOf(
         date = LocalDate.of(2026, 10, 3),
         note = "Review timeline components with the design team",
         imageUri = null,
-        authorName = "Aliyah"
+        authorName = "Aliyah",
+        status = TaskStatus.IN_PROGRESS,
+        isOverdue = true
     ),
 
     DocumentationEntryItem(
@@ -248,11 +331,12 @@ val sampleDocumentationItems = listOf(
         date = LocalDate.of(2026, 10, 8),
         note = "Double check everything meets the requirements and works without errors",
         imageUri = null,
-        authorName = "Twisha"
+        authorName = "Twisha",
+        status = TaskStatus.TODO,
+        isOverdue = false
     )
 
 )
-
 
 // PREVIEWS ------------
 // 1. Standard Content Preview (Populated List)
