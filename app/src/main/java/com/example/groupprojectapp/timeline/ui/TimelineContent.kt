@@ -2,6 +2,7 @@ package com.example.groupprojectapp.timeline.ui
 
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,10 +19,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,21 +48,30 @@ import java.time.LocalDate
  * VIEW (MVVM):
  * the Timeline (Gantt chart) screen.
  *
- * What it shows: a top bar with Back, then one of three states:
- * loading spinner, empty message, or the chart (legend, a fixed left pane of
- * task labels, and a right pane with the date header, bars and today line
- * that scrolls sideways).
+ * What it shows: a top bar with Back (and a "Today" button when the chart is
+ * visible), then one of three states: loading spinner, empty message, or the
+ * chart (legend, a left pane of task labels, and a right pane with the date
+ * header, bars and today line that scrolls sideways).
  *
  * What it does NOT do: no date maths, filtering or database work. It draws
  * [TimelineUiState] and passes the Back click up through onBackClick.
  * Because it only receives state, the previews below can supply fake data.
  *
- * Local UI-only state: the two scroll positions stay here because they are
- * not app data and nothing outside this screen needs them.
+ * Sizing: left pane width and day width come from the screen size
+ * (BoxWithConstraints). Portrait shows about 4 days; landscape tries to fit
+ * the whole project. The day width has an sp-based minimum, so long projects
+ * and large text scroll instead of squashing.
  *
- * Accessibility (R5): row height, header height and day width are sp-based
- * so the chart grows with the user's text size; status is shown as text as
- * well as colour; the Back icon has a content description.
+ * Scrolling: on opening (and after rotation) the chart scrolls so today is
+ * centred in the right pane. The "Today" button re-centres it on demand.
+ *
+ * Local UI-only state: the scroll positions, the open sheet and the
+ * re-centre counter stay here because they are not app data and nothing
+ * outside this screen needs them.
+ *
+ * Accessibility (R5): row height, header height and minimum day width are
+ * sp-based so the chart grows with the user's text size; status is shown as
+ * text as well as colour; the Back icon has a content description.
  */
 
 /*
@@ -74,12 +88,14 @@ import java.time.LocalDate
     [x] today line
     [x] empty state when there are no tasks
     [x] horizontal scrolling
+    [x] sizes from the screen (BoxWithConstraints)
+    [x] auto-scroll to today + Today button
  */
 
 /*
    Accessibility (R5) — larger system text:
       [x] stop label text wrapping onto extra lines (maxLines = 1 + ellipsis)
-      [x] row height, header height and day width are sp-based, so they grow with the user's text size
+      [x] row height, header height and minimum day width are sp-based, so they grow with the user's text size
 */
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,6 +110,14 @@ fun TimelineContent(
     // rememberSaveable so it survives rotation, like activePicker in the task form.
     var sheetTaskId by rememberSaveable { mutableStateOf<Long?>(null) }
 
+    // UI-only state: how many times "Today" has been tapped.
+    // The top bar can't see the scroll target (it's worked out inside BoxWithConstraints),
+    // so the button just bumps this counter, and the LaunchedEffect below re-runs when it changes.
+    var recentreRequests by remember { mutableIntStateOf(0) }
+
+    // Only show the Today button when there is a chart to scroll
+    val showChart = !uiState.isLoading && uiState.items.isNotEmpty()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -104,6 +128,14 @@ fun TimelineContent(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to Dashboard"
                         )
+                    }
+                },
+                actions = {
+                    if (showChart) {
+                        // Text button: clearer than an icon and needs no contentDescription
+                        TextButton(onClick = { recentreRequests++ }) {
+                            Text("Today")
+                        }
                     }
                 }
             )
@@ -118,8 +150,9 @@ fun TimelineContent(
         // Dimensions defined in sp so they scale properly with accessibility font size, then converted to Dp
         val rowHeightDp = with(density) { 64.sp.toDp() }
         val headerHeightDp = with(density) { 40.sp.toDp() }
-        val dayWidthDp =
-            with(density) { 56.sp.toDp() } // sp-based width so 2x font scale header dates don't wrap/cut off
+        // Smallest a day column may get. sp-based so 2x font scale header dates don't wrap/cut off.
+        // If the screen-based width would be smaller, this wins and the chart scrolls instead.
+        val minDayWidthDp = with(density) { 56.sp.toDp() }
 
         // Remember scroll states:
         val verticalScrollState = rememberScrollState()
@@ -156,33 +189,72 @@ fun TimelineContent(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
                     )
 
-                    // VERTICAL SCROLL CONTAINER (Links left and right panes together)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .verticalScroll(verticalScrollState)
-                    ) {
-                        // LEFT PANE (Fixed sideways, scrolls vertically)
-                        TimelineLeftPane(
-                            items = uiState.items,
-                            headerHeight = headerHeightDp,
-                            rowHeight = rowHeightDp,
-                            onItemClick = { taskId -> sheetTaskId = taskId }
-                        )
+                    // SCREEN-BASED SIZES
+                    // BoxWithConstraints tells us how much space the chart has (maxWidth/maxHeight, already Dp)
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val isLandscape = maxWidth > maxHeight
 
-                        // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
-                        TimelineRightPane(
-                            items = uiState.items,
-                            firstDate = uiState.firstDate,
-                            totalNumDays = uiState.totalNumDays,
-                            headerHeight = headerHeightDp,
-                            rowHeight = rowHeightDp,
-                            dayWidth = dayWidthDp,
-                            todayOffset = uiState.todayOffset,
-                            horizontalScrollState = horizontalScrollState,
-                            onItemClick = { taskId -> sheetTaskId = taskId },
-                            modifier = Modifier.weight(1f)
-                        )
+                        // Left pane: a share of the width, kept within sensible bounds
+                        val leftPaneWidthDp = (maxWidth * if (isLandscape) 0.25f else 0.35f)
+                            .coerceIn(110.dp, 220.dp)
+
+                        // Right pane gets whatever is left
+                        val rightPaneWidthDp = maxWidth - leftPaneWidthDp
+
+                        // Portrait: ~4 days visible. Landscape: try to fit the whole project.
+                        // coerceAtLeast(1) guards against dividing by 0 days.
+                        val dayWidthDp = (
+                                if (isLandscape) rightPaneWidthDp / uiState.totalNumDays.coerceAtLeast(1)
+                                else rightPaneWidthDp / 4
+                                ).coerceAtLeast(minDayWidthDp)
+
+                        // AUTO-SCROLL TO TODAY
+                        // Today's centre, then shift left by half the visible width so today sits in the middle
+                        val todayCentreDp = dayWidthDp * uiState.todayOffset + dayWidthDp / 2
+                        val targetDp = todayCentreDp - rightPaneWidthDp / 2
+
+                        // Scroll state works in whole pixels.
+                        // Negative / too-large values are fine: scrollTo stops at the edges.
+                        val targetPx = with(density) { targetDp.toPx() }.toInt()
+
+                        // Keys:
+                        // - targetPx: changes with day width, todayOffset or pane width (e.g. rotation)
+                        // - recentreRequests: changes on each "Today" tap
+                        // NOT keyed on items: the list re-emits whenever any task changes, which
+                        // would yank the chart back to today while the user is looking elsewhere.
+                        LaunchedEffect(targetPx, recentreRequests) {
+                            horizontalScrollState.scrollTo(targetPx)
+                        }
+
+                        // VERTICAL SCROLL CONTAINER (Links left and right panes together)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(verticalScrollState)
+                        ) {
+                            // LEFT PANE (Fixed sideways, scrolls vertically)
+                            TimelineLeftPane(
+                                items = uiState.items,
+                                headerHeight = headerHeightDp,
+                                rowHeight = rowHeightDp,
+                                width = leftPaneWidthDp,
+                                onItemClick = { taskId -> sheetTaskId = taskId }
+                            )
+
+                            // RIGHT PANE (Scrolls horizontally & vertically, takes remaining width)
+                            TimelineRightPane(
+                                items = uiState.items,
+                                firstDate = uiState.firstDate,
+                                totalNumDays = uiState.totalNumDays,
+                                headerHeight = headerHeightDp,
+                                rowHeight = rowHeightDp,
+                                dayWidth = dayWidthDp,
+                                todayOffset = uiState.todayOffset,
+                                horizontalScrollState = horizontalScrollState,
+                                onItemClick = { taskId -> sheetTaskId = taskId },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
                     }
                 }
             }
@@ -206,8 +278,6 @@ fun TimelineContent(
                 )
             }
         }
-
-
     }
 }
 
@@ -221,8 +291,8 @@ private val sampleTimelineUiState = TimelineUiState(
     items = listOf(
         TimelineItem(
             taskId = 1L,
-            startDate = LocalDate.of(2026, 10, 1),     // ← new (offset 0)
-            dueDate = LocalDate.of(2026, 10, 1),       // ← new (length 1)
+            startDate = LocalDate.of(2026, 10, 1),
+            dueDate = LocalDate.of(2026, 10, 1),
             title = "Task 1",
             startOffsetDays = 0,
             lengthDays = 1,
@@ -232,8 +302,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 2L,
-            startDate = LocalDate.of(2026, 10, 3),     // ← new (offset 2)
-            dueDate = LocalDate.of(2026, 10, 5),       // ← new (length 3)
+            startDate = LocalDate.of(2026, 10, 3),
+            dueDate = LocalDate.of(2026, 10, 5),
             title = "Task 2",
             startOffsetDays = 2,
             lengthDays = 3,
@@ -243,8 +313,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 3L,
-            startDate = LocalDate.of(2026, 10, 2),     // ← new (offset 1)
-            dueDate = LocalDate.of(2026, 10, 9),       // ← new (length 8)
+            startDate = LocalDate.of(2026, 10, 2),
+            dueDate = LocalDate.of(2026, 10, 9),
             title = "Task 3",
             startOffsetDays = 1,
             lengthDays = 8,
@@ -254,8 +324,8 @@ private val sampleTimelineUiState = TimelineUiState(
         ),
         TimelineItem(
             taskId = 4L,
-            startDate = LocalDate.of(2026, 10, 1),     // ← new (offset 0)
-            dueDate = LocalDate.of(2026, 10, 2),       // ← new (length 2)
+            startDate = LocalDate.of(2026, 10, 1),
+            dueDate = LocalDate.of(2026, 10, 2),
             title = "Task 4",
             startOffsetDays = 0,
             lengthDays = 2,
@@ -267,9 +337,11 @@ private val sampleTimelineUiState = TimelineUiState(
 )
 
 // PREVIEWS ---------------
+// Note: Previews don't run LaunchedEffect scrolling reliably — check auto-scroll on the emulator.
 
 
-// simultanously shows both dark and light theme
+// simultaneously shows both dark and light theme
+// (portrait default size: right pane should show about 4 days)
 @Preview(showBackground = true, name = "Light Mode")
 @Preview(
     showBackground = true,
@@ -278,6 +350,22 @@ private val sampleTimelineUiState = TimelineUiState(
 )
 @Composable
 private fun TimelineContentThemePreview() {
+    GroupProjectAppTheme {
+        TimelineContent(
+            uiState = sampleTimelineUiState,
+            onBackClick = {},
+            onOpenDocs = {}
+        )
+    }
+}
+
+// Landscape: width > height, so day width = right pane ÷ total days (but never below the minimum).
+// 800 wide: 600 / 14 ≈ 43 dp < 56 dp minimum → minimum wins, chart scrolls.
+// 1100 wide: left clamps to 220, 880 / 14 ≈ 63 dp → whole 14-day sample fits.
+@Preview(showBackground = true, widthDp = 800, heightDp = 400, name = "Landscape 800 (scrolls)")
+@Preview(showBackground = true, widthDp = 1100, heightDp = 450, name = "Landscape 1100 (fits)")
+@Composable
+private fun TimelineContentLandscapePreview() {
     GroupProjectAppTheme {
         TimelineContent(
             uiState = sampleTimelineUiState,
@@ -319,6 +407,7 @@ private fun TimelineContentLoadingPreview(){
     }
 }
 
+// 2x font: minimum day width (56.sp) doubles, so columns don't squash and the chart scrolls instead
 @Preview(showBackground = true, name = "Normal Font")
 @Preview(showBackground = true, fontScale = 2f, name = "2x Font Scale")
 @Composable

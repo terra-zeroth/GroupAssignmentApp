@@ -38,10 +38,11 @@ fun TimelineLeftPane(
     items: List<TimelineItem>,
     headerHeight: Dp,
     rowHeight: Dp,
+    width: Dp,
     onItemClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.width(180.dp)) {
+    Column(modifier = modifier.width(width)) {
         // Blank Spacer to align with Date Header in right pane
         Spacer(modifier = Modifier.height(headerHeight))
 
