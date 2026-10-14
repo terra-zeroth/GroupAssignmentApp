@@ -21,13 +21,18 @@ import com.example.groupprojectapp.tasks.TaskContainer
 object TaskRoutes {
     const val LIST = "tasks_list"
     const val DETAIL_ARG = "taskId"
+    const val ASSIGNEE_ARG = "assigneeId"
     const val DETAIL = "task_detail"
-    const val DETAIL_ROUTE = "$DETAIL/{$DETAIL_ARG}"
+    const val DETAIL_ROUTE = "$DETAIL/{$DETAIL_ARG}?$ASSIGNEE_ARG={$ASSIGNEE_ARG}"
 
     /** Sentinel meaning "no id yet" — i.e. this is a brand new task. */
     const val NEW_TASK_ID = -1L
 
-    fun detailRoute(taskId: Long?) = "$DETAIL/${taskId ?: NEW_TASK_ID}"
+    /** Sentinel meaning "no default assignee was passed in". */
+    const val NO_DEFAULT_ASSIGNEE = -1L
+
+    fun detailRoute(taskId: Long?, defaultAssigneeId: Long? = null) =
+        "$DETAIL/${taskId ?: NEW_TASK_ID}?$ASSIGNEE_ARG=${defaultAssigneeId ?: NO_DEFAULT_ASSIGNEE}"
 }
 
 /**
@@ -70,13 +75,21 @@ fun TasksFeature(currentUserName: String, onBackToHome: () -> Unit) {
                 viewModel = viewModel,
                 currentUserName = currentUserName,
                 onTaskClick = { taskId -> navController.navigate(TaskRoutes.detailRoute(taskId)) },
-                onAddTaskClick = { navController.navigate(TaskRoutes.detailRoute(null)) },
+                onAddTaskClick = { defaultAssigneeId ->
+                    navController.navigate(TaskRoutes.detailRoute(null, defaultAssigneeId))
+                },
                 onBackToHome = onBackToHome
             )
         }
         composable(
             route = TaskRoutes.DETAIL_ROUTE,
-            arguments = listOf(navArgument(TaskRoutes.DETAIL_ARG) { type = NavType.LongType })
+            arguments = listOf(
+                navArgument(TaskRoutes.DETAIL_ARG) { type = NavType.LongType },
+                navArgument(TaskRoutes.ASSIGNEE_ARG) {
+                    type = NavType.LongType
+                    defaultValue = TaskRoutes.NO_DEFAULT_ASSIGNEE
+                }
+            )
         ) {
             val viewModel: TaskDetailViewModel = viewModel(factory = factory)
             TaskDetailScreen(

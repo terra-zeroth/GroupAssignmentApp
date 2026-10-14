@@ -130,7 +130,7 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val container = remember { TaskContainer(context) }
             val tasks by container.taskRepository.allTasks.collectAsState(initial = emptyList())
-            val completionPercent = HomeCalculations.completionPercent(tasks)
+            val completionPercent = HomeCalculations.completionPercent(tasks, userName)
             val currentTasks = HomeCalculations.currentTasks(tasks, userName)
 
             Row(

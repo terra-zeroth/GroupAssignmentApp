@@ -12,11 +12,15 @@ import java.time.LocalDate
  */
 object HomeCalculations {
 
-    /** Percentage (0-100) of all team tasks that are DONE. 0 when there are no tasks yet. */
-    fun completionPercent(tasks: List<TaskWithAssignee>): Int {
-        if (tasks.isEmpty()) return 0
-        val done = tasks.count { it.task.status == TaskStatus.DONE }
-        return (done * 100) / tasks.size
+    /**
+     * Percentage (0-100) of the logged-in user's OWN tasks that are DONE
+     * (not the whole team's). 0 when they have no tasks yet.
+     */
+    fun completionPercent(tasks: List<TaskWithAssignee>, userName: String): Int {
+        val myTasks = tasks.filter { it.assignee?.name == userName }
+        if (myTasks.isEmpty()) return 0
+        val done = myTasks.count { it.task.status == TaskStatus.DONE }
+        return (done * 100) / myTasks.size
     }
 
     /**

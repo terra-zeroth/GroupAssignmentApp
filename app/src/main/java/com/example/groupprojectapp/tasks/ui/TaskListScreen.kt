@@ -67,7 +67,7 @@ fun TaskListScreen(
     viewModel: TaskListViewModel,
     currentUserName: String,
     onTaskClick: (Long) -> Unit,
-    onAddTaskClick: () -> Unit,
+    onAddTaskClick: (Long?) -> Unit,
     onBackToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -106,7 +106,7 @@ fun TaskListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddTaskClick) {
+            FloatingActionButton(onClick = { onAddTaskClick(uiState.selectedAssigneeId) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add task")
             }
         }
