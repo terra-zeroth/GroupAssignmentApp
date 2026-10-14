@@ -1,5 +1,12 @@
 package com.example.groupprojectapp
 
+import androidx.compose.foundation.background
+import androidx.compose.ui.platform.LocalContext
+import com.example.groupprojectapp.home.HomeCalculations
+import com.example.groupprojectapp.tasks.TaskContainer
+import com.example.groupprojectapp.tasks.data.DeadlineCalculations
+import com.example.groupprojectapp.timeline.ui.components.timelineItemColor
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -120,6 +127,12 @@ class MainActivity : ComponentActivity() {
                 fontWeight = FontWeight.Bold
             )
 
+            val context = LocalContext.current
+            val container = remember { TaskContainer(context) }
+            val tasks by container.taskRepository.allTasks.collectAsState(initial = emptyList())
+            val completionPercent = HomeCalculations.completionPercent(tasks)
+            val currentTasks = HomeCalculations.currentTasks(tasks, userName)
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -136,8 +149,16 @@ class MainActivity : ComponentActivity() {
                             color = Color.DarkGray,
                             shape = RoundedCornerShape(size = 4.dp)
                         )
+                        .padding(8.dp)
                 ) {
-                    Text("Completion:")
+                    Column {
+                        Text("Completion:")
+                        Text(
+                            text = "$completionPercent%",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
 
                 Box(
@@ -149,8 +170,41 @@ class MainActivity : ComponentActivity() {
                             color = Color.DarkGray,
                             shape = RoundedCornerShape(size = 4.dp)
                         )
+                        .padding(8.dp)
                 ) {
-                    Text("Current To-Do")
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("Current To-Do")
+                        if (currentTasks.isEmpty()) {
+                            Text("Nothing assigned to you", fontSize = 12.sp)
+                        } else {
+                            currentTasks.forEach { taskWithAssignee ->
+                                val rowColor = timelineItemColor(
+                                    isOverdue = HomeCalculations.isOverdue(taskWithAssignee),
+                                    status = taskWithAssignee.task.status
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            color = rowColor.copy(alpha = 0.25f),
+                                            shape = RoundedCornerShape(size = 3.dp)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = rowColor,
+                                            shape = RoundedCornerShape(size = 3.dp)
+                                        )
+                                        .padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = taskWithAssignee.task.title,
+                                        fontSize = 12.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
             }

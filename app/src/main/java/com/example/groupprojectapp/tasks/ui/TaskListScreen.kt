@@ -1,5 +1,7 @@
 package com.example.groupprojectapp.tasks.ui
 
+import com.example.groupprojectapp.tasks.data.DeadlineCalculations
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -193,7 +195,8 @@ private fun TaskRow(
         },
         supportingContent = {
             val assigneeText = taskWithAssignee.assignee?.name ?: "Unassigned"
-            Text("$assigneeText · due ${dueDate.format(DateTimeFormatter.ofPattern("d MMM"))}")
+            val deadlineText = DeadlineCalculations.deadlineLabel(task.dueDateEpochDay)
+                    Text("$assigneeText · due ${dueDate.format(DateTimeFormatter.ofPattern("d MMM"))} · $deadlineText")
         },
         leadingContent = {
             Checkbox(checked = isDone, onCheckedChange = { onToggleDone() })
