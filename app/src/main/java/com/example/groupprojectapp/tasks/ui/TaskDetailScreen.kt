@@ -62,6 +62,13 @@ enum class DatePickerTarget{
     DUE_DATE
 }
 
+private fun TaskPriority.label(): String = when (this) {
+    TaskPriority.MUST -> "Must"
+    TaskPriority.SHOULD -> "Should"
+    TaskPriority.COULD -> "Could"
+    TaskPriority.WONT -> "Won't"
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailScreen(
@@ -153,7 +160,7 @@ fun TaskDetailScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Text("Priority", style = MaterialTheme.typography.labelLarge)
+            Text("Priority (MoSCoW)", style = MaterialTheme.typography.labelLarge)
             val priorities = TaskPriority.values()
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
                 priorities.forEachIndexed { index, priority ->
@@ -162,7 +169,7 @@ fun TaskDetailScreen(
                         onClick = { viewModel.onPriorityChange(priority) },
                         shape = SegmentedButtonDefaults.itemShape(index = index, count = priorities.size)
                     ) {
-                        Text(priority.name)
+                        Text(priority.label())
                     }
                 }
             }

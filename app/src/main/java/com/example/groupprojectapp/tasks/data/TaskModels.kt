@@ -7,7 +7,18 @@ import androidx.room.PrimaryKey
 
 enum class TaskStatus { TODO, IN_PROGRESS, DONE }
 
-enum class TaskPriority { LOW, MEDIUM, HIGH }
+/**
+ * MoSCoW priority (requirements-engineering style tagging), replacing the
+ * old Low/Medium/High scale per the team plan (M6).
+ *
+ * Declared in THIS exact order — WONT first, MUST last — because Kotlin's
+ * enum .ordinal follows declaration order, and TaskListViewModel sorts
+ * "most urgent first" using sortedByDescending { priority.ordinal }. MUST
+ * needs the highest ordinal (3) so it sorts to the top; WONT needs the
+ * lowest (0) so it sorts to the bottom. Don't reorder these without also
+ * checking that sort still makes sense.
+ */
+enum class TaskPriority { WONT, COULD, SHOULD, MUST }
 
 /**
  * One row per real login account (seeded from UserData.kt's userDatabase,
@@ -51,7 +62,7 @@ data class Task(
     val dueDateEpochDay: Long,
     val startDateEpochDay: Long,
     val status: TaskStatus = TaskStatus.TODO,
-    val priority: TaskPriority = TaskPriority.MEDIUM,
+    val priority: TaskPriority = TaskPriority.SHOULD,
     val assigneeId: Long? = null,
     val dependsOnTaskId: Long? = null
 )

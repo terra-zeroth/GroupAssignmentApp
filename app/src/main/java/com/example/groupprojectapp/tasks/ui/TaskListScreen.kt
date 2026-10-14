@@ -1,5 +1,7 @@
 package com.example.groupprojectapp.tasks.ui
 
+import com.example.groupprojectapp.tasks.data.DeadlineCalculations
+
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +67,7 @@ fun TaskListScreen(
     viewModel: TaskListViewModel,
     currentUserName: String,
     onTaskClick: (Long) -> Unit,
-    onAddTaskClick: () -> Unit,
+    onAddTaskClick: (Long?) -> Unit,
     onBackToHome: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -104,7 +106,7 @@ fun TaskListScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddTaskClick) {
+            FloatingActionButton(onClick = { onAddTaskClick(uiState.selectedAssigneeId) }) {
                 Icon(imageVector = Icons.Filled.Add, contentDescription = "Add task")
             }
         }
@@ -193,7 +195,8 @@ private fun TaskRow(
         },
         supportingContent = {
             val assigneeText = taskWithAssignee.assignee?.name ?: "Unassigned"
-            Text("$assigneeText · due ${dueDate.format(DateTimeFormatter.ofPattern("d MMM"))}")
+            val deadlineText = DeadlineCalculations.deadlineLabel(task.dueDateEpochDay)
+                    Text("$assigneeText · due ${dueDate.format(DateTimeFormatter.ofPattern("d MMM"))} · $deadlineText")
         },
         leadingContent = {
             Checkbox(checked = isDone, onCheckedChange = { onToggleDone() })

@@ -22,7 +22,7 @@ data class TaskDetailUiState(
     val description: String = "",
     val dueDate: LocalDate = LocalDate.now(),
     val startDate: LocalDate = LocalDate.now(),
-    val priority: TaskPriority = TaskPriority.MEDIUM,
+    val priority: TaskPriority = TaskPriority.SHOULD,
     val status: TaskStatus = TaskStatus.TODO,
     val assigneeId: Long? = null,
     val dependsOnTaskId: Long? = null,
@@ -62,8 +62,18 @@ class TaskDetailViewModel(
     private val taskId: Long? = savedStateHandle.get<Long>(TaskRoutes.DETAIL_ARG)
         ?.takeIf { it != TaskRoutes.NEW_TASK_ID }
 
+    // Pre-fills the assignee when adding a new task from a filtered list
+    // (e.g. tapping "+" while the "Aliyah" chip is selected). Ignored when
+    // editing an existing task — its real assigneeId gets loaded below.
+    private val defaultAssigneeId: Long? = savedStateHandle.get<Long>(TaskRoutes.ASSIGNEE_ARG)
+        ?.takeIf { it != TaskRoutes.NO_DEFAULT_ASSIGNEE }
+
     private val _uiState = MutableStateFlow(
-        TaskDetailUiState(taskId = taskId, isNewTask = taskId == null)
+        TaskDetailUiState(
+            taskId = taskId,
+            isNewTask = taskId == null,
+            assigneeId = if (taskId == null) defaultAssigneeId else null
+        )
     )
     val uiState: StateFlow<TaskDetailUiState> = _uiState.asStateFlow()
 
