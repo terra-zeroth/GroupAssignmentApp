@@ -65,6 +65,10 @@ fun DocumentationFeature(
         onBackClick = onBackClick,
         onAddClick = onAddClick,
         onEntryClick = onEntryClick,
+        onStatusFilterSelected = { status -> viewModel.onStatusFilterSelected(status) },
+        onAuthorFilterSelected = { author -> viewModel.onAuthorFilterSelected(author) },
+        onClearFilters = { viewModel.clearFilters() },
         modifier = modifier
+
     )
 }

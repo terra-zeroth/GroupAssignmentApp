@@ -14,24 +14,32 @@ import kotlinx.coroutines.flow.Flow
  * so a wrong table or column name is a build error, not a crash
  *
  * The list queries JOIN the tasks table to add each entry's task title,
- * so the task <-> entry relationship is used, not just stored (R3)
- * They return Flow, so the list updates by itself after an add or edit
+ * status and due date, so the task <-> entry relationship is used, not just
+ * stored (R3). Status and due date let the list show Completed / Overdue.
+ * They return Flow, so the list updates by itself after an add or edit,
+ * or when the task's status changes
  */
 
 @Dao
 interface DocumentationDao {
 
     @Query("""
-        SELECT documentation_entries.*, tasks.title AS taskTitle 
+        SELECT documentation_entries.*,
+               tasks.title AS taskTitle,
+               tasks.status AS taskStatus,
+               tasks.dueDateEpochDay AS taskDueEpochDay
         FROM documentation_entries 
         INNER JOIN tasks ON documentation_entries.taskId = tasks.id
         ORDER BY documentation_entries.dateEpochDay DESC
     """)
-    // All entries, newest date first, each with its task's title (list screen)
+    // All entries, newest date first, each with its task's title, status and due date (list screen)
     fun getAllEntriesWithTaskTitle(): Flow<List<DocumentationEntryWithTask>>
 
     @Query("""
-        SELECT documentation_entries.*, tasks.title AS taskTitle 
+        SELECT documentation_entries.*,
+               tasks.title AS taskTitle,
+               tasks.status AS taskStatus,
+               tasks.dueDateEpochDay AS taskDueEpochDay
         FROM documentation_entries 
         INNER JOIN tasks ON documentation_entries.taskId = tasks.id
         WHERE documentation_entries.taskId = :taskId

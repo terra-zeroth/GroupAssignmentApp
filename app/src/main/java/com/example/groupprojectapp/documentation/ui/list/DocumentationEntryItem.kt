@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.documentation.ui.list
 
+import com.example.groupprojectapp.tasks.data.TaskStatus
 import java.time.LocalDate
 
 /**
@@ -14,6 +15,9 @@ import java.time.LocalDate
  * database or does conversions (R2).
  *
  * imageUri is null when the entry has no screenshot (A4).
+ * status and isOverdue come from the entry's task and decide the card's
+ * colour and label (Completed = green, Overdue = red). isOverdue is worked
+ * out in the ViewModel, not stored.
  */
 
 data class DocumentationEntryItem(
@@ -22,5 +26,7 @@ data class DocumentationEntryItem(
     val date: LocalDate,
     val note: String,
     val imageUri: String? = null,
-    val authorName: String
+    val authorName: String,
+    val status: TaskStatus = TaskStatus.TODO,
+    val isOverdue: Boolean = false,
 )

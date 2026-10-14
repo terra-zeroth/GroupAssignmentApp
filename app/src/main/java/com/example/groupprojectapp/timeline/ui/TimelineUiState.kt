@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.timeline.ui
 
+import com.example.groupprojectapp.timeline.ui.components.TimelineStatusCategory
 import java.time.LocalDate
 
 /**
@@ -12,6 +13,10 @@ import java.time.LocalDate
  *
  * isLoading defaults to true so the spinner shows until the first list of
  * tasks arrives from the database.
+ *
+ * items is already filtered by selectedCategories. totalTaskCount is the
+ * count BEFORE filtering, so the screen can tell "no tasks at all" apart
+ * from "the filter hides everything".
  */
 data class TimelineUiState(
     val items: List<TimelineItem> = emptyList(),
@@ -19,5 +24,6 @@ data class TimelineUiState(
     val firstDate: LocalDate = LocalDate.now(),
     val totalNumDays: Int = 14, // total number of days the chart covers
     val todayOffset: Int = 0, // how many days from the first date to today (for the today line)
+    val selectedCategories: Set<TimelineStatusCategory> = TimelineStatusCategory.entries.toSet(), // ticked legend chips
+    val totalTaskCount: Int = 0, // number of tasks before filtering
 )
-

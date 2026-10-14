@@ -25,6 +25,9 @@ import com.example.groupprojectapp.tasks.TaskContainer
  * both call onBackClick, so Back returns to the dashboard instead of
  * exiting the app (R1).
  *
+ * Filter: legend chip taps are passed straight to the ViewModel's
+ * toggleFilter, which owns the filter state (so it survives rotation).
+ *
  * TaskContainer is created here because the Tasks container lives inside
  * TasksFeature; this is safe because the database is a singleton.
  */
@@ -57,6 +60,7 @@ fun TimelineFeature(
         uiState = uiState,
         onBackClick = onBackClick,
         onOpenDocs = onOpenDocs,
+        onFilterToggle = viewModel::toggleFilter, // legend chip tap, ViewModel updates the filter
         modifier = modifier
     )
 }
