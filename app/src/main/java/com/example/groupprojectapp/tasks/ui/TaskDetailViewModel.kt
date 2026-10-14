@@ -22,7 +22,7 @@ data class TaskDetailUiState(
     val description: String = "",
     val dueDate: LocalDate = LocalDate.now(),
     val startDate: LocalDate = LocalDate.now(),
-    val priority: TaskPriority = TaskPriority.MEDIUM,
+    val priority: TaskPriority = TaskPriority.SHOULD,
     val status: TaskStatus = TaskStatus.TODO,
     val assigneeId: Long? = null,
     val dependsOnTaskId: Long? = null,

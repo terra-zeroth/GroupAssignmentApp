@@ -17,7 +17,7 @@ import com.example.groupprojectapp.documentation.data.DocumentationEntry
  * make sure two threads can't create it twice.
  */
 
-@Database(entities = [Task::class, Member::class, DocumentationEntry::class], version = 4, exportSchema = false)
+@Database(entities = [Task::class, Member::class, DocumentationEntry::class], version = 5, exportSchema = false)
 abstract class TasksDatabase : RoomDatabase() {
 
     abstract fun taskDao(): TaskDao
