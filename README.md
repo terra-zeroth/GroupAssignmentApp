@@ -35,13 +35,13 @@ The app focuses on one project's key dates, which the timeline already covers
 ## Features
  
 **Twisha:**  
-project framework (navigation, MVVM, Room), Material 3 theme with dark mode, local login with hashed passwords, settings (DataStore), GitHub activity feed (R4)
+project framework (navigation, MVVM, Room), local login with hashed passwords, settings (DataStore), GitHub activity feed (R4)
  
 **Manasviba:**  
 to-do list, add/edit task form, task detail, job allocation with "my tasks" filter, deadline logic (days remaining, overdue, PERT), MoSCoW priority
  
 **Aliyah:**  
-Gantt timeline with today line, documentation log, screenshot attachment via photo picker (R6), timeline → documentation link
+Gantt timeline with today line, documentation log, screenshot attachment via photo picker (R6), timeline → documentation link, Material 3 theme 
  
 ---
 
