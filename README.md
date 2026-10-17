@@ -24,11 +24,11 @@ Teammates message each other live from their own phones.
 **Why it's out of Scope:**  
 Needs a backend server and syncing between phones. Room stores data on one phone only and the spec says syncing isn't required
 
-**2) Full calendar integration:**  
-Syncing with Google Calendar and managing students' whole uni schedule  
+**2) Account login and creation**  
+Email sign-up, log in from any phone (e.g. Firebase)
   
 **Why it's out of Scope:**  
-The app focuses on one project's key dates, which the timeline already covers
+Needs a backend service not covered in the unit. Since all other data is local, online accounts wouldn't let teammates share tasks anyway
 
 ---
  
