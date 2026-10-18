@@ -3,11 +3,7 @@ Building an Android app in Kotlin with Jetpack Compose that helps students that 
 
 ## Team
 
-| Aliyah Richshaine Macawile | 22072366 |
-|----------------------------|----------|
-| Twisha Domadia             | 22875086 |
-| Manasviba Chauhan          | 23127979 |
-
+Can't disclose due to privacy concerns.
 
 ## App description
 
