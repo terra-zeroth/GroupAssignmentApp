@@ -7,7 +7,7 @@ Building an Android app in Kotlin with Jetpack Compose that helps students that 
 |----------------------------|----------|
 | Twisha Domadia             | 22875086 |
 | Manasviba Chauhan          | 23127979 |
-|----------------------------|----------|
+
 
 ## App description
 
