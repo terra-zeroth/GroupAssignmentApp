@@ -28,14 +28,14 @@ Needs a backend server and syncing between phones. Room stores data on one phone
 Email sign-up, log in from any phone (e.g. Firebase)
   
 **Why it's out of Scope:**  
-Needs a backend service not covered in the unit. Since all other data is local, online accounts wouldn't let teammates share tasks anyway
+Needs a backend service not covered in the unit. Since all other data is local, online accounts wouldn't let teammates share tasks anyway, many security implications to consider
 
 ---
  
 ## Features
  
 **Twisha:**  
-project framework (navigation, MVVM, Room), local login with hashed passwords, settings (DataStore), GitHub activity feed (R4)
+project framework (navigation, MVVM, Room), local login with hashed passwords, settings, GitHub activity feed (R4)
  
 **Manasviba:**  
 to-do list, add/edit task form, task detail, job allocation with "my tasks" filter, deadline logic (days remaining, overdue, PERT), MoSCoW priority
