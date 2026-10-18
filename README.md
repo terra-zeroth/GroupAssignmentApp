@@ -58,26 +58,25 @@ Gantt timeline with today line, documentation log, screenshot attachment via pho
 | Kotlin / KSP | KSP `2.2.10-2.0.2` (downloaded by Gradle automatically) |
 | Internet connection | Needed for the first Gradle sync and for the GitHub activity feature |
  
-Main libraries (downloaded automatically during Gradle sync): Jetpack Compose (BOM), Material 3, Navigation Compose 2.10.2, Lifecycle ViewModel Compose 2.11.0, Room 2.8.5, DataStore Preferences 1.2.1.
- 
-No API key is needed to build the project. [TODO] `[Confirm: add a note here if the GitHub feature needs a personal access token, e.g. if the repo is private.]`
- 
-## Build steps
- 
-1. **Extract the project.**  
-   Unzip the submitted file into a folder. Avoid paths that contain spaces or are very long.
-3. **Open it in Android Studio.**  
-   Go to *File → Open*, select the extracted project folder (the one containing `settings.gradle.kts`), then click **OK**. Choose **Trust Project** if asked.
-5. **Check the Gradle JDK.**  
-   Go to *File → Settings → Build, Execution, Deployment → Build Tools → Gradle*. Make sure **Gradle JDK** is set to a JDK 21 (for example *jbr-21*), then click **Apply**.
-7. **Install the Android 17 SDK if it's missing.**  
-   Go to *Tools → SDK Manager → SDK Platforms*. Tick **Android 17.0 ("CinnamonBun")**, making sure API 37.1 is included, then click **Apply**.
-9. **Sync Gradle.**  
-    Click **Sync Project with Gradle Files** (the elephant icon in the top-right toolbar). Wait for it to finish without errors. The first sync downloads dependencies and can take a few minutes.
-11. **Build.**  
-    Go to *Build → Assemble Project*, or simply press Run in the next section, which builds automatically.
+**Permissions:** the app declares only `INTERNET` (for the GitHub feature). Attaching screenshots uses Android's photo picker, which needs no storage permission.
 
----
+### Libraries
+
+All libraries are downloaded automatically during Gradle sync. Versions without a number are set by the Compose BOM or in `gradle/libs.versions.toml`.
+
+| Library | Version | Used for |
+|---------|---------|----------|
+| Jetpack Compose (BOM) and Material 3 | set by the BOM | All screens and the app theme |
+| Material Icons Extended | set by the BOM | Icons (back, sort, filter, add) |
+| Navigation Compose | 2.10.2 | Tasks list to task detail navigation |
+| Lifecycle ViewModel Compose | 2.11.0 | ViewModels |
+| Room (runtime, ktx, KSP compiler) | 2.8.5 | Local database for tasks, members and documentation entries |
+| DataStore Preferences | 1.2.1 | Saved task sort order |
+| Coil | 3.3.0 | Showing documentation screenshots |
+| Retrofit and Gson converter | 2.11.0 | GitHub REST API (commit list) |
+
+No API key is needed to build the project. The GitHub feature calls the public GitHub REST API without logging in, so no personal access token is required. This means only **public** repositories can be shown (a private repository shows an error) and GitHub limits how many unauthenticated requests can be made per hour.
+
  
 ## Run steps
  
@@ -86,18 +85,51 @@ No API key is needed to build the project. [TODO] `[Confirm: add a note here if 
 |---------|-------|
 | Device profile | Medium Phone (6.4", 1080 × 2400, 420 dpi) |
 | System image | Google Play Intel x86_64 Atom System Image |
-| API level | **API 37.0 "CinnamonBun", Android 17.0** |
+| API level | **API 37.0 "CinnamonBun" android 17.0** |
 | Services | Google Play Store |
  
 ### To run
-1. **Create the emulator if you don't have it.**  
+
+1. **Create the emulator if you don't have it.**
    Go to *Tools → Device Manager → + (Create Virtual Device)*. Pick **Medium Phone**, choose the **API 37.0, Google Play Intel x86_64** system image (download it if prompted), then click **Finish**.
-3. **Select the device.**  
+2. **Select the device.**
    In the toolbar device dropdown, choose the emulator (or a real phone running Android 8.1 or later with USB debugging enabled).
-5. **Run.**  
+3. **Run.**
    Make sure the run configuration is **app**, then click the green **Run ▶** button.
-7. **First launch.**  
-   `[Confirm: either "Tap Create account and register a username and password, then log in" OR "Log in with the demo account: username ___ / password ___".]` Tasks and documentation entries can then be added from inside the app.
+4. **First launch.**
+   Log in with the built-in demo account:
+
+   | Field | Value |
+   |-------|-------|
+   | Group name | `Group 1` (any text works; it is not checked) |
+   | Username | `Test` |
+   | Password | `test` |
+
+The username and password are case-sensitive (capital **T** in the username, all lowercase in the password). The list of assignees is created from the built-in accounts the first time the app runs. Tasks and documentation entries can then be added from inside the app.
+
+### Using the GitHub feature
+
+The GitHub screen shows the recent commits of a repository. It needs the **exact GitHub owner and repository name** and the repository must be **public**. You do not need to own the repository and no link is needed.
+
+1. From the dashboard, open **Settings**.
+2. Tap **Setup GitHub Repository**.
+3. Enter the **GitHub Owner** and **Repository Name**, then tap **Save**. The app returns to Settings.
+4. Tap Back to return to the dashboard, then open **[GitHub button label]**. The commits load.
+
+Both fields are required. If either is left blank, the setup screen shows "Please enter a valid owner and repository."
+
+The details are not saved when the app is closed, so enter them again after restarting.
+
+**Test repositories**
+
+| Case | GitHub Owner | Repository Name | Expected result |
+|------|--------------|-----------------|-----------------|
+| Working repository | `terra-zeroth` | `GroupAssignmentApp` | List of recent commits (message, author, date) |
+| Empty repository (error case) | `lilicilia` | `MAD-EmptyRepoTest` | An error message, e.g. "Failed to load commits: HTTP 409" |
+| Nothing entered yet | (blank) | (blank) | "Please set up your GitHub repository in Settings." |
+
+An incorrect owner or repository name also shows an error (HTTP 404). With no internet connection, an error message appears with a different reason and the rest of the app still works.
+
 ---
 
 ## Architecture
