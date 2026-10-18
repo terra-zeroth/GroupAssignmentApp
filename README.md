@@ -2,11 +2,10 @@
 Building an Android app in Kotlin with Jetpack Compose that helps students that have a group project assignment organise their tasks and timeline etc. Helps manage group work.
 
 ## Team
-|----------------------------|----------|
+
 | Aliyah Richshaine Macawile | 22072366 |
 |----------------------------|----------|
 | Twisha Domadia             | 22875086 |
-|----------------------------|----------|
 | Manasviba Chauhan          | 23127979 |
 |----------------------------|----------|
 
