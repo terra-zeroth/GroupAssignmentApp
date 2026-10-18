@@ -24,6 +24,7 @@ import androidx.core.net.toUri
 import com.example.groupprojectapp.github.data.GitHubCommit
 import com.example.groupprojectapp.github.RetrofitClient
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GithubScreen(
     owner: String,
@@ -60,25 +61,27 @@ fun GithubScreen(
 
     Scaffold(
         topBar = {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back"
-                    )
-                }
+            Column {
+                TopAppBar(
+                    title = { Text("GitHub Activity") },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        titleContentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onTertiaryContainer
+                    ),
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    }
+                )
 
-                Spacer(modifier = Modifier.width(16.dp))
-
-                Text(
-                    text = "GitHub Activity",
-                    style = MaterialTheme.typography.titleLarge
+                HorizontalDivider(
+                    thickness = 2.dp,
+                    color = MaterialTheme.colorScheme.outline
                 )
             }
         }
