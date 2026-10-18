@@ -1,34 +1,35 @@
+
 package com.example.groupprojectapp
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import com.example.groupprojectapp.github.GitHubCommit
-import com.example.groupprojectapp.github.RetrofitClient
+import android.content.Intent
+import android.content.ActivityNotFoundException
+import android.widget.Toast
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 
-import androidx.compose.material3.Text
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.net.toUri
 
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.PaddingValues
-
+import com.example.groupprojectapp.github.data.GitHubCommit
+import com.example.groupprojectapp.github.RetrofitClient
 
 @Composable
-fun GithubScreen() {
-
+fun GithubScreen(
+    owner: String,
+    repo: String,
+    onBack: () -> Unit
+) {
     var commits by remember {
         mutableStateOf<List<GitHubCommit>>(emptyList())
     }
@@ -37,58 +38,125 @@ fun GithubScreen() {
         mutableStateOf<String?>(null)
     }
 
-    LaunchedEffect(Unit) {
-        try {
-            commits = RetrofitClient.api.getCommits(
-                owner = "terra-zeroth",
-                repo = "GroupAssignmentApp"
-            )
-            error = null
-        } catch (e: Exception) {
-            error = "Failed to load commits: ${e.message}"
+    val context = LocalContext.current
+
+    LaunchedEffect(owner, repo) {
+        commits = emptyList()
+        error = null
+
+        if (owner.isBlank() || repo.isBlank()) {
+            error = "Please set up your GitHub repository in Settings."
+        } else {
+            try {
+                commits = RetrofitClient.api.getCommits(
+                    owner = owner,
+                    repo = repo
+                )
+            } catch (e: Exception) {
+                error = "Failed to load commits: ${e.message}"
+            }
         }
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(
-            text = "GitHub Activity",
-            modifier = Modifier.padding(16.dp),
-            fontWeight = FontWeight.Bold
-        )
+    Scaffold(
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back"
+                    )
+                }
 
-        error?.let {
-            Text(
-                text = it,
-                modifier = Modifier.padding(16.dp)
-            )
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Text(
+                    text = "GitHub Activity",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
         }
+    ) { innerPadding ->
 
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(16.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
         ) {
-            items(commits) { commit ->
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
+
+            // Display any API or configuration errors
+            error?.let {
+                Text(
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+
+            // Open the configured repository in a browser
+            if (owner.isNotBlank() && repo.isNotBlank()) {
+
+                Button(
+                    onClick = {
+                        val url = "https://github.com/$owner/$repo"
+
+                        // Implicit Intent from the lecture
+                        val intent = Intent(
+                            Intent.ACTION_VIEW,
+                            url.toUri()
+                        )
+
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: ActivityNotFoundException) {
+                            Toast.makeText(
+                                context,
+                                "No browser available",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Text(
-                        text = commit.commit.message,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text("Open GitHub Repository")
+                }
+            }
 
-                    Text(
-                        text = commit.commit.author.name
-                    )
+            // Display commits inside the app
+            LazyColumn(
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(16.dp)
+            ) {
+                items(commits) { commit ->
 
-                    Text(
-                        text = commit.commit.author.date
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = commit.commit.message,
+                            fontWeight = FontWeight.Bold
+                        )
 
-                    HorizontalDivider()
+                        Text(
+                            text = commit.commit.author.name
+                        )
+
+                        Text(
+                            text = commit.commit.author.date
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        HorizontalDivider()
+                    }
                 }
             }
         }
