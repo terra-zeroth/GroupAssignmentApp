@@ -15,14 +15,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.core.net.toUri
 
 import com.example.groupprojectapp.github.data.GitHubCommit
-import com.example.groupprojectapp.github.RetrofitClient
+import com.example.groupprojectapp.github.data.RetrofitClient
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

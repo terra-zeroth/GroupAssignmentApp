@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.github
+package com.example.groupprojectapp.github.data
 
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
