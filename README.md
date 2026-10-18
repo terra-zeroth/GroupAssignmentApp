@@ -99,3 +99,10 @@ No API key is needed to build the project. [TODO] `[Confirm: add a note here if 
 7. **First launch.**  
    `[Confirm: either "Tap Create account and register a username and password, then log in" OR "Log in with the demo account: username ___ / password ___".]` Tasks and documentation entries can then be added from inside the app.
 ---
+
+## Architecture
+
+The application follows the MVVM pattern with a repository layer for its main features: Tasks, Timeline and Documentation. In these, screens are composable functions that draw a single UiState object exposed by a ViewModel where it obtains data through repositories, which reads from Room or DataStore. Three parts do not follow this patter. The Login ViewModel, which checks a hardcoded list of accounts (UserData.kt) instead of using a repository. Home reads the task repository directly in the Screen. 
+
+Currently Settings and GitHub have no ViewModel, instead the Settings values are held in Main Activity and passed into a stateless screen and the GitHub screen calls the Retrofit API directly and keeps its results in the composable.
+
