@@ -1,5 +1,6 @@
 package com.example.groupprojectapp.github
 
+import com.example.groupprojectapp.github.data.GitHubCommit
 import retrofit2.http.GET
 import retrofit2.http.Path
 

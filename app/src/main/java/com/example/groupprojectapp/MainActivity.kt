@@ -17,6 +17,10 @@ import com.example.groupprojectapp.login.ui.LoginScreen
 import com.example.groupprojectapp.session.SessionViewModel
 import com.example.groupprojectapp.tasks.TaskContainer
 import com.example.groupprojectapp.ui.theme.GroupProjectAppTheme
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import com.example.groupprojectapp.github.ui.GithubSetupScreen
 
 /**
  * Entry point of the app. It acts as a simple screen switcher driven by [SessionViewModel].
@@ -28,10 +32,27 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            var fontScale by rememberSaveable {
+                mutableFloatStateOf(1f)
+            }
+            val density = LocalDensity.current
+
+            var isDarkMode by rememberSaveable { mutableStateOf(false) }
+            var githubOwner by rememberSaveable { mutableStateOf("") }
+            var githubRepo by rememberSaveable { mutableStateOf("") }
             // App-wide theme: every screen gets the app palette (colours from ui/theme)
-            GroupProjectAppTheme {
+            GroupProjectAppTheme(
+                darkTheme = isDarkMode // Tells the app's theme either dark or light
+            ) {
+
                 // Surface paints the theme background behind every screen and sets the default
                 // text colour, so screens without a Scaffold match too
+                CompositionLocalProvider(
+                    LocalDensity provides Density(
+                        density = density.density,
+                        fontScale = density.fontScale * fontScale
+                    )
+                ) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -54,7 +75,7 @@ class MainActivity : ComponentActivity() {
                             groupName = sessionState.groupName,
                             userName = sessionState.userName,
                             onNavigate = { screen ->
-                                if (screen == "Documentation"){
+                                if (screen == "Documentation") {
                                     // clear filter, back to home
                                     sessionViewModel.openAllDocumentation()
                                 } else {
@@ -70,7 +91,7 @@ class MainActivity : ComponentActivity() {
                         )
 
                         "Timeline" -> TimelineScreen(
-                            onBackClick = { sessionViewModel.navigateTo("home")},
+                            onBackClick = { sessionViewModel.navigateTo("home") },
                             onOpenDocs = { taskId ->
                                 sessionViewModel.openDocumentationForTask(taskId)
                             }
@@ -101,9 +122,42 @@ class MainActivity : ComponentActivity() {
                             )
 
 
-                        "Github" -> GithubScreen()
-                        "Settings" -> SettingsScreen()
+                        "Github" -> GithubScreen(
+                            owner = githubOwner,
+                            repo = githubRepo,
+                            onBack = {
+                                sessionViewModel.navigateTo("home")
+                            }
+                        )
+
+                        "GithubSetup" -> GithubSetupScreen(
+                            onSave = { owner, repo ->
+                                githubOwner = owner
+                                githubRepo = repo
+                                sessionViewModel.navigateTo("Settings")
+                            },
+                            onBack = {
+                                sessionViewModel.navigateTo("Settings")
+                            }
+                        )
+                        "Settings" -> SettingsScreen(
+                            fontScale = fontScale,
+                            onFontScaleChange = { newScale ->
+                                fontScale = newScale
+                            },
+                            isDarkMode = isDarkMode,
+                            onDarkModeChange = { enabled -> isDarkMode = enabled },
+                            onGithubClick = {
+                                sessionViewModel.navigateTo("GithubSetup")
+                            },
+                            onBack = {
+                                sessionViewModel.navigateTo("home")
+                            }
+                        )
                     }
+                }
+
+
                 }
             }
         }

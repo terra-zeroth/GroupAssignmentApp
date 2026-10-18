@@ -1,4 +1,4 @@
-package com.example.groupprojectapp.github
+package com.example.groupprojectapp.github.data
 
 data class GitHubCommit(
     val sha: String,
